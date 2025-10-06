@@ -53,6 +53,60 @@
                 </div>
             </div>
 
+            <!-- Pending Courses -->
+            <div *ngIf="!loading && pendingCourses.length > 0">
+                <h4 style="margin-bottom: 1rem; color: var(--accent-color);">⏳ Môn chờ xác nhận</h4>
+                <div class="course-grid">
+                    <div *ngFor="let course of pendingCourses" class="course-card pending-course">
+                        <div class="course-header">
+                            <div class="course-info">
+                                <h3>{{ course.courseCode }}</h3>
+                                <p class="course-name">{{ course.courseName }}</p>
+                            </div>
+                            <div class="course-credit">
+                                <span class="credit-badge">{{ course.credit }} TC</span>
+                                <div *ngIf="course.semester" class="semester-info">
+                                    <span class="semester-badge pending">📅 {{ course.semester }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="course-details">
+                            <div class="detail-item" *ngIf="course.lecturerName">
+                                <span class="label">👨‍🏫 Giảng viên:</span>
+                                <span class="value">{{ course.lecturerName }}</span>
+                            </div>
+                            <div class="detail-item" *ngIf="course.period && course.dayOfWeek">
+                                <span class="label">📅 Thời gian:</span>
+                                <span class="value">{{ course.dayOfWeek }}, tiết {{ course.period }}</span>
+                            </div>
+                            <div class="detail-item" *ngIf="course.classroom">
+                                <span class="label">🏫 Phòng học:</span>
+                                <span class="value">{{ course.classroom }}</span>
+                            </div>
+                            <div class="detail-item"
+                                *ngIf="course.availableSlots !== undefined && course.maxSlots !== undefined">
+                                <span class="label">👥 Slot:</span>
+                                <span class="value">{{ course.availableSlots }}/{{ course.maxSlots }}</span>
+                            </div>
+                        </div>
+
+                        <div class="course-status">
+                            <div class="status-pending">
+                                ⏳ Chờ thanh toán
+                            </div>
+                        </div>
+
+                        <div class="course-actions">
+                            <button class="btn btn-danger" [disabled]="processing" *ngIf="course.canUnregister"
+                                (click)="confirmUnregister(course)">
+                                {{ processing ? '⏳ Đang xử lý...' : '❌ Hủy đăng ký' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Enrolled Courses -->
             <div *ngIf="!loading && enrolledCourses.length > 0">
                 <h4 style="margin-bottom: 1rem; color: var(--primary-color);">📝 Môn đã đăng ký</h4>
@@ -98,7 +152,8 @@
                         </div>
 
                         <div class="course-actions">
-                            <button class="btn btn-danger" [disabled]="processing" (click)="confirmUnregister(course)">
+                            <button class="btn btn-danger" [disabled]="processing" *ngIf="course.canUnregister"
+                                (click)="confirmUnregister(course)">
                                 {{ processing ? '⏳ Đang xử lý...' : '❌ Hủy đăng ký' }}
                             </button>
                         </div>

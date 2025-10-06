@@ -69,6 +69,7 @@ export interface CourseInfo {
     classroom?: string;
     semester?: string;
     canUnregister?: boolean;
+    registrationStatus?: string;
 }
 
 export interface CourseRegistrationRequest {

@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService, CourseRegistrationRequest, CourseRegistrationResponse, CourseInfo, SemesterInfo } from './user.service';
+import { firstValueFrom, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { UserService, CourseRegistrationRequest, CourseInfo, SemesterInfo, StudentGrades, PaymentInfo, GradeItem } from './user.service';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
 
@@ -16,12 +18,13 @@ import { MenuItem } from '../shared/sidebar.component';
 export class UserRegistrationComponent implements OnInit {
     availableCourses: CourseInfo[] = [];
     enrolledCourses: CourseInfo[] = [];
-    completedCourses: CourseInfo[] = []; // Môn đã học xong
+    pendingCourses: CourseInfo[] = [];
+    completedCourses: CourseInfo[] = [];
     loading = false;
     processing = false;
     error = '';
     successMessage = '';
-    selectedSemester = '2024-1';
+    selectedSemester = '';
     userName = '';
     availableSemesters: SemesterInfo[] = [];
 
@@ -39,111 +42,177 @@ export class UserRegistrationComponent implements OnInit {
         private router: Router
     ) { }
 
-    ngOnInit() {
-        this.userName = 'Sinh viên'; // Set default or get from auth service
-        this.loadSemesters();
-        this.loadEnrolledCourses().then(() => {
-            this.loadCompletedCourses().then(() => {
-                this.loadAvailableCourses();
-            });
-        });
+    async ngOnInit(): Promise<void> {
+        this.userName = 'Sinh viên';
+        await this.initializeSemesters();
+        await this.reloadSemesterData();
     }
 
-    loadSemesters() {
-        this.userService.getAllSemesters().subscribe({
-            next: (semesters) => {
-                console.log('Semesters loaded:', semesters);
-                this.availableSemesters = semesters;
-                // Set selected semester to the first one (newest) if not set
-                if (semesters.length > 0 && !this.selectedSemester) {
-                    this.selectedSemester = semesters[0].semester;
-                }
-            },
-            error: (error) => {
-                console.error('Error loading semesters:', error);
+    private async initializeSemesters(): Promise<void> {
+        try {
+            const semesters = await firstValueFrom(this.userService.getAllSemesters());
+            console.log('Semesters loaded:', semesters);
+            this.availableSemesters = semesters || [];
+            if (!this.selectedSemester && this.availableSemesters.length > 0) {
+                this.selectedSemester = this.availableSemesters[0].semester;
             }
-        });
+        } catch (error) {
+            console.error('Error loading semesters:', error);
+            this.availableSemesters = [];
+        }
     }
 
-    loadEnrolledCourses(): Promise<void> {
-        return new Promise((resolve) => {
-            // Lấy danh sách môn đã đăng ký từ bảng điểm (chỉ lấy môn đang học)
-            this.userService.getStudentGrades(this.selectedSemester).subscribe({
-                next: (grades) => {
-                    console.log('Student grades loaded for enrolled courses:', grades);
-                    // Lọc các môn đang học (không có điểm cuối kỳ)
-                    this.enrolledCourses = grades.gradeItems
-                        .filter(item => item.status === 'Đang học')
-                        .map(item => ({
-                            courseId: item.courseId,
-                            courseCode: item.courseCode,
-                            courseName: item.courseName,
-                            credit: item.credit,
-                            canRegister: false,
-                            canUnregister: true, // Có thể hủy đăng ký
-                            reason: 'Đang học',
-                            semester: item.semester
-                        }));
-                    resolve();
-                },
-                error: (error) => {
-                    console.error('Error loading enrolled courses:', error);
-                    this.enrolledCourses = [];
-                    resolve();
-                }
-            });
-        });
+    private async reloadSemesterData(): Promise<void> {
+        const semester = this.selectedSemester || this.availableSemesters[0]?.semester || '2024-1';
+        this.selectedSemester = semester;
+        await this.loadSemesterData(semester);
     }
 
-    loadCompletedCourses(): Promise<void> {
-        return new Promise((resolve) => {
-            // Lấy danh sách môn đã học từ tất cả các học kỳ
-            this.userService.getStudentGrades().subscribe({
-                next: (grades) => {
-                    console.log('Student grades loaded:', grades);
-                    // Lọc các môn đã hoàn thành (có điểm)
-                    this.completedCourses = grades.gradeItems
-                        .filter(item => item.status === 'Đã hoàn thành' || item.grade !== null)
-                        .map(item => ({
-                            courseId: item.courseId,
-                            courseCode: item.courseCode,
-                            courseName: item.courseName,
-                            credit: item.credit,
-                            canRegister: false,
-                            reason: 'Đã hoàn thành'
-                        }));
-                    resolve();
-                },
-                error: (error) => {
-                    console.error('Error loading completed courses:', error);
-                    this.completedCourses = [];
-                    resolve();
-                }
-            });
-        });
-    }
-
-    loadAvailableCourses() {
+    private async loadSemesterData(semester: string): Promise<void> {
         this.loading = true;
         this.error = '';
 
-        this.userService.getAvailableCourses(this.selectedSemester).subscribe({
-            next: (courses) => {
-                console.log('Available courses loaded:', courses);
-                // Lọc bỏ các môn đã hoàn thành và đang học
-                this.availableCourses = courses.filter(course =>
-                    !this.isCompleted(course.courseId) && !this.isEnrolled(course.courseId)
-                );
-                this.loading = false;
-            },
-            error: (error) => {
-                console.error('Error loading available courses:', error);
-                this.error = 'Lỗi khi tải danh sách môn học';
-                this.loading = false;
-            }
-        });
+        try {
+            const result = await firstValueFrom(forkJoin({
+                available: this.userService.getAvailableCourses(semester),
+                grades: this.userService.getStudentGrades(semester),
+                payment: this.userService.getPaymentInfo(semester).pipe(catchError(() => of(null)))
+            }));
+
+            this.partitionCourses(result.available ?? [], result.grades, result.payment);
+        } catch (error) {
+            console.error('Error loading registration data:', error);
+            this.error = 'Lỗi khi tải dữ liệu đăng ký môn học';
+            this.availableCourses = [];
+            this.enrolledCourses = [];
+            this.pendingCourses = [];
+            this.completedCourses = [];
+        } finally {
+            this.loading = false;
+        }
     }
 
+    private partitionCourses(available: CourseInfo[], grades: StudentGrades, payment: PaymentInfo | null): void {
+        this.availableCourses = [];
+        this.enrolledCourses = [];
+        this.pendingCourses = [];
+        this.completedCourses = [];
+
+        const gradeItems = grades?.gradeItems ?? [];
+        const gradeMap = new Map<number, GradeItem>();
+        const completedIds = new Set<number>();
+        const assumedEnrolledIds = new Set<number>();
+        const completedMap = new Map<number, CourseInfo>();
+
+        gradeItems.forEach(item => {
+            if (!item || !item.courseId) {
+                return;
+            }
+            gradeMap.set(item.courseId, item);
+
+            if (item.grade != null) {
+                completedIds.add(item.courseId);
+                if (!completedMap.has(item.courseId)) {
+                    completedMap.set(item.courseId, this.mapGradeItemToCourseInfo(item));
+                }
+            } else {
+                assumedEnrolledIds.add(item.courseId);
+            }
+        });
+
+        this.completedCourses = Array.from(completedMap.values());
+
+        const paymentDetails = payment?.courseDetails ?? [];
+        const enrolledIds = new Set<number>();
+        const pendingIds = new Set<number>();
+
+        paymentDetails.forEach(detail => {
+            if (!detail || !detail.courseId) {
+                return;
+            }
+
+            if (detail.enrollmentStatus === 'ENROLLED') {
+                enrolledIds.add(detail.courseId);
+            } else if (detail.enrollmentStatus === 'PENDING_PAYMENT') {
+                pendingIds.add(detail.courseId);
+            }
+        });
+
+        const courseLookup = new Map<number, CourseInfo>();
+        available.forEach(course => {
+            courseLookup.set(course.courseId, course);
+        });
+
+        const finalEnrolledIds = new Set<number>([...enrolledIds]);
+        assumedEnrolledIds.forEach(id => {
+            if (!pendingIds.has(id) && !completedIds.has(id)) {
+                finalEnrolledIds.add(id);
+            }
+        });
+
+        finalEnrolledIds.forEach(courseId => {
+            const course = this.composeCourseInfo(courseId, courseLookup, gradeMap);
+            this.enrolledCourses.push({
+                ...course,
+                canRegister: false,
+                canUnregister: false,
+                reason: 'Đang học'
+            });
+        });
+
+        pendingIds.forEach(courseId => {
+            const course = this.composeCourseInfo(courseId, courseLookup, gradeMap);
+            this.pendingCourses.push({
+                ...course,
+                canRegister: false,
+                canUnregister: true,
+                reason: 'Chờ thanh toán'
+            });
+        });
+
+        const unavailableIds = new Set<number>([...completedIds, ...finalEnrolledIds, ...pendingIds]);
+
+        this.availableCourses = available
+            .filter(course => !unavailableIds.has(course.courseId))
+            .map(course => ({
+                ...course,
+                canRegister: true,
+                canUnregister: false,
+                reason: undefined
+            }));
+    }
+
+    private mapGradeItemToCourseInfo(item: GradeItem): CourseInfo {
+        return {
+            courseId: item.courseId,
+            courseCode: item.courseCode,
+            courseName: item.courseName,
+            credit: item.credit ?? 0,
+            canRegister: false,
+            reason: item.status,
+            semester: item.semester
+        };
+    }
+
+    private composeCourseInfo(courseId: number, courseLookup: Map<number, CourseInfo>, gradeMap: Map<number, GradeItem>): CourseInfo {
+        const course = courseLookup.get(courseId);
+        if (course) {
+            return course;
+        }
+
+        const gradeItem = gradeMap.get(courseId);
+        if (gradeItem) {
+            return this.mapGradeItemToCourseInfo(gradeItem);
+        }
+
+        return {
+            courseId,
+            courseCode: '---',
+            courseName: 'Môn học chưa rõ',
+            credit: 0,
+            canRegister: false
+        };
+    }
 
     async registerCourse(courseId: number) {
         this.processing = true;
@@ -156,19 +225,11 @@ export class UserRegistrationComponent implements OnInit {
                 semester: this.selectedSemester
             };
 
-            const response = await this.userService.registerCourse(request).toPromise();
+            const response = await firstValueFrom(this.userService.registerCourse(request));
 
             if (response?.success) {
                 this.successMessage = response.message || 'Đăng ký môn học thành công!';
-                // Reload data after successful registration
-                setTimeout(() => {
-                    this.loadEnrolledCourses().then(() => {
-                        this.loadCompletedCourses().then(() => {
-                            this.loadAvailableCourses();
-                        });
-                    });
-                    this.successMessage = '';
-                }, 1500); // Wait 1.5 seconds to show success message
+                await this.reloadSemesterData();
             } else {
                 this.error = response?.message || 'Lỗi khi đăng ký môn học';
             }
@@ -188,23 +249,12 @@ export class UserRegistrationComponent implements OnInit {
 
     async unregisterCourse(courseId: number) {
         this.processing = true;
-        this.error = '';
-        this.successMessage = '';
-
         try {
-            const response = await this.userService.unregisterCourse(courseId).toPromise();
+            const response = await firstValueFrom(this.userService.unregisterCourse(courseId));
 
             if (response?.success) {
                 this.successMessage = response.message || 'Hủy đăng ký môn học thành công!';
-                // Reload data after successful unregistration
-                setTimeout(() => {
-                    this.loadEnrolledCourses().then(() => {
-                        this.loadCompletedCourses().then(() => {
-                            this.loadAvailableCourses();
-                        });
-                    });
-                    this.successMessage = '';
-                }, 1500); // Wait 1.5 seconds to show success message
+                await this.reloadSemesterData();
             } else {
                 this.error = response?.message || 'Lỗi khi hủy đăng ký môn học';
             }
@@ -217,9 +267,8 @@ export class UserRegistrationComponent implements OnInit {
     }
 
     getTotalEnrolledCredits(): number {
-        return this.enrolledCourses.reduce((total, course) => total + course.credit, 0);
+        return [...this.enrolledCourses, ...this.pendingCourses].reduce((total, course) => total + (course.credit || 0), 0);
     }
-
     getAvailableCoursesCount(): number {
         return this.availableCourses.filter(c => c.canRegister).length;
     }
@@ -249,12 +298,8 @@ export class UserRegistrationComponent implements OnInit {
         this.router.navigate(['/user/grades']);
     }
 
-    onSemesterChange() {
+    async onSemesterChange() {
         console.log('Semester changed to:', this.selectedSemester);
-        this.loadEnrolledCourses().then(() => {
-            this.loadCompletedCourses().then(() => {
-                this.loadAvailableCourses();
-            });
-        });
+        await this.reloadSemesterData();
     }
 }
