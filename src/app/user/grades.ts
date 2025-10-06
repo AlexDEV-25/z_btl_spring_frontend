@@ -6,7 +6,11 @@ import { UserService, StudentGrades, GradeItem, SemesterInfo } from './user.serv
 import { AuthService } from '../auth.service';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
-// Removed GradeCalculationService - logic moved to backend
+
+interface StatusOption {
+    label: string;
+    value: string;
+}
 
 @Component({
     selector: 'app-user-grades',
@@ -20,12 +24,21 @@ export class UserGradesComponent implements OnInit {
     filteredGrades: GradeItem[] = [];
     loading = false;
     error = '';
-    studentId: number = 1;
     userName = '';
-    selectedSemester = '2024-1';
+    selectedSemester = '';
     availableSemesters: SemesterInfo[] = [];
+    displayGpa = 0;
 
-    // Menu items for sidebar
+    searchTerm = '';
+    statusFilter = '';
+    semesterFilter = '';
+    statusOptions: StatusOption[] = [
+        { label: 'Tất cả trạng thái', value: '' },
+        { label: 'Đã hoàn thành', value: 'Đã hoàn thành' },
+        { label: 'Đang học', value: 'Đang học' },
+        { label: 'Chưa học', value: 'Chưa học' }
+    ];
+
     menuItems: MenuItem[] = [
         { icon: '📅', label: 'Thời khóa biểu', route: '/user/schedule' },
         { icon: '📊', label: 'Bảng điểm', route: '/user/grades' },
@@ -34,50 +47,46 @@ export class UserGradesComponent implements OnInit {
         { icon: '👤', label: 'Thông tin cá nhân', route: '/user/profile' }
     ];
 
-    // Filter properties
-    searchTerm = '';
-    statusFilter = '';
-    semesterFilter = '';
-
     constructor(
         private userService: UserService,
         private router: Router,
         private authService: AuthService
     ) { }
 
-    ngOnInit() {
+    ngOnInit(): void {
         const currentUser = this.authService.getCurrentUser();
-        this.studentId = 1;
         this.userName = currentUser?.fullName || 'Sinh viên';
         this.loadSemesters();
-        this.loadGrades();
     }
 
-    loadSemesters() {
+    loadSemesters(): void {
         this.userService.getAllSemesters().subscribe({
             next: (semesters) => {
-                console.log('Semesters loaded:', semesters);
-                this.availableSemesters = semesters;
-                // Set selected semester to the first one (newest) if not set
-                if (semesters.length > 0 && !this.selectedSemester) {
-                    this.selectedSemester = semesters[0].semester;
+                this.availableSemesters = semesters || [];
+                if (this.availableSemesters.length > 0 && !this.selectedSemester) {
+                    this.selectedSemester = this.availableSemesters[0].semester;
                 }
+                this.loadGrades();
             },
             error: (error) => {
                 console.error('Error loading semesters:', error);
+                this.loadGrades();
             }
         });
     }
 
-    loadGrades() {
+    loadGrades(): void {
         this.loading = true;
         this.error = '';
 
-        this.userService.getStudentGrades(this.selectedSemester).subscribe({
+        const semesterParam = this.selectedSemester ? this.selectedSemester : undefined;
+
+        this.userService.getStudentGrades(semesterParam).subscribe({
             next: (data) => {
-                console.log('Grades loaded successfully:', data);
                 this.grades = data;
-                this.filteredGrades = [...data.gradeItems];
+                this.displayGpa = this.resolveDisplayGpa(data);
+                this.semesterFilter = '';
+                this.filterGrades();
                 this.loading = false;
             },
             error: (error) => {
@@ -88,21 +97,51 @@ export class UserGradesComponent implements OnInit {
         });
     }
 
+    filterGrades(): void {
+        if (!this.grades) {
+            this.filteredGrades = [];
+            return;
+        }
 
-    filterGrades() {
-        if (!this.grades) return;
+        const normalizedSearch = this.searchTerm.trim().toLowerCase();
 
-        this.filteredGrades = this.grades.gradeItems.filter(item => {
-            const matchesSearch = !this.searchTerm ||
-                item.courseCode.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-                item.courseName.toLowerCase().includes(this.searchTerm.toLowerCase());
+        this.filteredGrades = this.grades.gradeItems.filter((item) => {
+            const matchesSearch = !normalizedSearch ||
+                item.courseCode.toLowerCase().includes(normalizedSearch) ||
+                item.courseName.toLowerCase().includes(normalizedSearch);
 
             const matchesStatus = !this.statusFilter || item.status === this.statusFilter;
-
             const matchesSemester = !this.semesterFilter || item.semester === this.semesterFilter;
 
             return matchesSearch && matchesStatus && matchesSemester;
         });
+    }
+
+    setStatusFilter(value: string): void {
+        this.statusFilter = value;
+        this.filterGrades();
+    }
+
+    onSemesterFilterChange(): void {
+        this.filterGrades();
+    }
+
+    clearFilters(): void {
+        if (!this.hasActiveFilters()) {
+            return;
+        }
+        this.searchTerm = '';
+        this.statusFilter = '';
+        this.semesterFilter = '';
+        this.filterGrades();
+    }
+
+    hasActiveFilters(): boolean {
+        return !!(this.searchTerm || this.statusFilter || this.semesterFilter);
+    }
+
+    onSemesterChange(): void {
+        this.loadGrades();
     }
 
     getGPAClassification(gpa: number): string {
@@ -114,13 +153,10 @@ export class UserGradesComponent implements OnInit {
     }
 
     getCompletionPercentage(): number {
-        if (!this.grades || this.grades.totalCredits === 0) return 0;
+        if (!this.grades || this.grades.totalCredits === 0) {
+            return 0;
+        }
         return (this.grades.completedCredits / this.grades.totalCredits) * 100;
-    }
-
-    onSemesterChange() {
-        console.log('Semester changed to:', this.selectedSemester);
-        this.loadGrades();
     }
 
     getCompletedCount(): number {
@@ -131,15 +167,12 @@ export class UserGradesComponent implements OnInit {
         return this.grades?.inProgressCourses || 0;
     }
 
-    getGradeCount(grade: string): number {
-        if (!this.grades) return 0;
-        return this.grades.gradeItems.filter(item => item.grade === grade).length;
-    }
-
     getGradeClass(grade: string | null | undefined): string {
-        if (!grade) return '';
+        if (!grade) {
+            return '';
+        }
 
-        const gradeMap: { [key: string]: string } = {
+        const gradeMap: Record<string, string> = {
             'A+': 'grade-a-plus',
             'A': 'grade-a',
             'B+': 'grade-b-plus',
@@ -155,35 +188,25 @@ export class UserGradesComponent implements OnInit {
     }
 
     getClassification(totalScore?: number | null): string | null {
-        if (totalScore == null) return null;
+        if (totalScore == null) {
+            return null;
+        }
 
-        if (totalScore >= 9.5) return "Xuất sắc";
-        if (totalScore >= 8.5) return "Giỏi";
-        if (totalScore >= 8.0) return "Khá giỏi";
-        if (totalScore >= 7.0) return "Khá";
-        if (totalScore >= 6.5) return "TB khá";
-        if (totalScore >= 5.5) return "Trung bình";
-        if (totalScore >= 5.0) return "TB yếu";
-        if (totalScore >= 4.0) return "Yếu (vẫn qua môn)";
-        return "Trượt";
-    }
-
-    getScoreRange(totalScore?: number | null): string | null {
-        if (totalScore == null) return null;
-
-        if (totalScore >= 9.5) return "9.5 – 10.0";
-        if (totalScore >= 8.5) return "8.5 – 9.4";
-        if (totalScore >= 8.0) return "8.0 – 8.4";
-        if (totalScore >= 7.0) return "7.0 – 7.9";
-        if (totalScore >= 6.5) return "6.5 – 6.9";
-        if (totalScore >= 5.5) return "5.5 – 6.4";
-        if (totalScore >= 5.0) return "5.0 – 5.4";
-        if (totalScore >= 4.0) return "4.0 – 4.9";
-        return "< 4.0";
+        if (totalScore >= 9.5) return 'Xuất sắc';
+        if (totalScore >= 8.5) return 'Giỏi';
+        if (totalScore >= 8.0) return 'Khá giỏi';
+        if (totalScore >= 7.0) return 'Khá';
+        if (totalScore >= 6.5) return 'Trung bình khá';
+        if (totalScore >= 5.5) return 'Trung bình';
+        if (totalScore >= 5.0) return 'Trung bình yếu';
+        if (totalScore >= 4.0) return 'Yếu';
+        return 'Trượt';
     }
 
     getClassificationClass(totalScore?: number | null): string {
-        if (totalScore == null) return '';
+        if (totalScore == null) {
+            return '';
+        }
 
         if (totalScore >= 9.5) return 'classification-excellent';
         if (totalScore >= 8.5) return 'classification-good';
@@ -197,7 +220,7 @@ export class UserGradesComponent implements OnInit {
     }
 
     getStatusClass(status: string): string {
-        const statusMap: { [key: string]: string } = {
+        const statusMap: Record<string, string> = {
             'Đã hoàn thành': 'completed',
             'Đang học': 'in-progress',
             'Chưa học': 'not-started'
@@ -206,11 +229,14 @@ export class UserGradesComponent implements OnInit {
         return statusMap[status] || '';
     }
 
-    exportGrades() {
-        if (!this.grades) return;
+    exportGrades(): void {
+        if (!this.grades) {
+            return;
+        }
 
-        // Call backend API to generate and download CSV
-        this.userService.exportGrades(this.selectedSemester).subscribe({
+        const semesterParam = this.selectedSemester ? this.selectedSemester : undefined;
+
+        this.userService.exportGrades(semesterParam).subscribe({
             next: (blob) => {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -226,20 +252,74 @@ export class UserGradesComponent implements OnInit {
         });
     }
 
-    goToSchedule() {
+    goToSchedule(): void {
         this.router.navigate(['/user/schedule']);
     }
 
-    goToRegistration() {
+    goToRegistration(): void {
         this.router.navigate(['/user/registration']);
     }
 
-    logout() {
+    logout(): void {
         if (confirm('🚪 Bạn có chắc chắn muốn đăng xuất?')) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             sessionStorage.clear();
             this.router.navigate(['/login']);
         }
+    }
+
+    private resolveDisplayGpa(data: StudentGrades): number {
+        const backendGpa = data?.gpa ?? 0;
+        if (backendGpa && backendGpa > 0) {
+            return Math.round(backendGpa * 100) / 100;
+        }
+        return this.calculateGpa(data.gradeItems);
+    }
+
+    private calculateGpa(items: GradeItem[]): number {
+        if (!items || items.length === 0) {
+            return 0;
+        }
+
+        const coefficientItems = items.filter(item => item.scoreCoefficient4 != null && item.credit != null);
+        const coefficientCredits = coefficientItems.reduce((sum, item) => sum + (item.credit || 0), 0);
+
+        if (coefficientCredits > 0) {
+            const weightedSum = coefficientItems.reduce((sum, item) => {
+                const credit = item.credit || 0;
+                const coefficient = item.scoreCoefficient4 || 0;
+                return sum + (coefficient * credit);
+            }, 0);
+
+            return Math.round((weightedSum / coefficientCredits) * 100) / 100;
+        }
+
+        const gradePointMap: Record<string, number> = {
+            'A+': 4.0,
+            'A': 3.7,
+            'B+': 3.5,
+            'B': 3.0,
+            'C+': 2.5,
+            'C': 2.0,
+            'D+': 1.5,
+            'D': 1.0,
+            'F': 0.0
+        };
+
+        const letterItems = items.filter(item => item.grade && item.credit != null && gradePointMap[item.grade]);
+        const letterCredits = letterItems.reduce((sum, item) => sum + (item.credit || 0), 0);
+
+        if (letterCredits === 0) {
+            return 0;
+        }
+
+        const letterWeighted = letterItems.reduce((sum, item) => {
+            const credit = item.credit || 0;
+            const point = gradePointMap[item.grade || 'F'] || 0;
+            return sum + (point * credit);
+        }, 0);
+
+        return Math.round((letterWeighted / letterCredits) * 100) / 100;
     }
 }
