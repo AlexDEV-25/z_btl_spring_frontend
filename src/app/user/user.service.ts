@@ -118,6 +118,7 @@ export interface PaymentInfo {
     paymentStatus: string;
     paymentDate?: string;
     courseDetails: CoursePaymentDetail[];
+    canCreatePayment: boolean;
 }
 
 export interface CoursePaymentDetail {
@@ -217,7 +218,7 @@ export class UserService {
      * Lấy thông tin thanh toán học phí của tất cả semester
      */
     getAllPaymentInfo(): Observable<PaymentInfo[]> {
-        return this.http.get<PaymentInfo[]>(`${this.baseUrl}/payment/all`);
+        return this.http.get<PaymentInfo[]>(`${this.baseUrl}/payments/all`);
     }
 
     /**
