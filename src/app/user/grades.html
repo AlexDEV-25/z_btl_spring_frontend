@@ -103,7 +103,6 @@
                 <th>Điểm TK</th>
                 <th>Hệ số 4</th>
                 <th>Điểm chữ</th>
-                <th>Xếp loại</th>
                 <th>Trạng thái</th>
                 <th>Học kỳ</th>
               </tr>
@@ -139,12 +138,6 @@
                 <td class="grade" [class]="getGradeClass(item.grade)">
                   <span class="badge grade" *ngIf="item.grade">{{ item.grade }}</span>
                   <span *ngIf="!item.grade" class="no-grade">-</span>
-                </td>
-                <td class="classification" [class]="getClassificationClass(item.totalScore)">
-                  <span *ngIf="item.totalScore !== null" class="badge classification">
-                    {{ getClassification(item.totalScore) }}
-                  </span>
-                  <span *ngIf="item.totalScore === null">-</span>
                 </td>
                 <td class="status">
                   <span class="badge status" [class]="getStatusClass(item.status)">{{ item.status }}</span>

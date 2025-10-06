@@ -6,6 +6,7 @@ import { UserService, StudentGrades, GradeItem, SemesterInfo } from './user.serv
 import { AuthService } from '../auth.service';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
+import { forkJoin } from 'rxjs';
 
 interface StatusOption {
     label: string;
@@ -32,12 +33,6 @@ export class UserGradesComponent implements OnInit {
     searchTerm = '';
     statusFilter = '';
     semesterFilter = '';
-    statusOptions: StatusOption[] = [
-        { label: 'Tất cả trạng thái', value: '' },
-        { label: 'Đã hoàn thành', value: 'Đã hoàn thành' },
-        { label: 'Đang học', value: 'Đang học' },
-        { label: 'Chưa học', value: 'Chưa học' }
-    ];
 
     menuItems: MenuItem[] = [
         { icon: '📅', label: 'Thời khóa biểu', route: '/user/schedule' },
@@ -79,22 +74,12 @@ export class UserGradesComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        const semesterParam = this.selectedSemester ? this.selectedSemester : undefined;
+        if (!this.selectedSemester) {
+            this.fetchGradesForAllSemesters();
+            return;
+        }
 
-        this.userService.getStudentGrades(semesterParam).subscribe({
-            next: (data) => {
-                this.grades = data;
-                this.displayGpa = this.resolveDisplayGpa(data);
-                this.semesterFilter = '';
-                this.filterGrades();
-                this.loading = false;
-            },
-            error: (error) => {
-                console.error('Error loading grades:', error);
-                this.error = `Lỗi khi tải bảng điểm: ${error.status} - ${error.message || error.statusText}`;
-                this.loading = false;
-            }
-        });
+        this.fetchGradesForSemester(this.selectedSemester);
     }
 
     filterGrades(): void {
@@ -187,21 +172,6 @@ export class UserGradesComponent implements OnInit {
         return gradeMap[grade] || '';
     }
 
-    getClassification(totalScore?: number | null): string | null {
-        if (totalScore == null) {
-            return null;
-        }
-
-        if (totalScore >= 9.5) return 'Xuất sắc';
-        if (totalScore >= 8.5) return 'Giỏi';
-        if (totalScore >= 8.0) return 'Khá giỏi';
-        if (totalScore >= 7.0) return 'Khá';
-        if (totalScore >= 6.5) return 'Trung bình khá';
-        if (totalScore >= 5.5) return 'Trung bình';
-        if (totalScore >= 5.0) return 'Trung bình yếu';
-        if (totalScore >= 4.0) return 'Yếu';
-        return 'Trượt';
-    }
 
     getClassificationClass(totalScore?: number | null): string {
         if (totalScore == null) {
@@ -275,6 +245,96 @@ export class UserGradesComponent implements OnInit {
             return Math.round(backendGpa * 100) / 100;
         }
         return this.calculateGpa(data.gradeItems);
+    }
+
+    private fetchGradesForSemester(semester: string): void {
+        this.userService.getStudentGrades(semester).subscribe({
+            next: (data) => this.applyGradesData(data),
+            error: (error) => this.handleGradesError(error)
+        });
+    }
+
+    private fetchGradesForAllSemesters(): void {
+        const semesterCodes = this.availableSemesters.map(item => item.semester).filter(code => !!code);
+
+        if (semesterCodes.length === 0) {
+            this.userService.getStudentGrades().subscribe({
+                next: (data) => this.applyGradesData(data),
+                error: (error) => this.handleGradesError(error)
+            });
+            return;
+        }
+
+        forkJoin(semesterCodes.map(code => this.userService.getStudentGrades(code))).subscribe({
+            next: (results) => {
+                const aggregated = this.aggregateGrades(results);
+                this.applyGradesData(aggregated);
+            },
+            error: (error) => this.handleGradesError(error)
+        });
+    }
+
+    private aggregateGrades(gradeSets: StudentGrades[]): StudentGrades {
+        if (!gradeSets.length) {
+            return this.createEmptyGrades();
+        }
+
+        const first = gradeSets.find(item => item != null);
+        const allItems = gradeSets.flatMap(item => item.gradeItems || []);
+        const sortedItems = [...allItems].sort((a, b) => {
+            if (a.semester === b.semester) {
+                return a.courseCode.localeCompare(b.courseCode);
+            }
+            return b.semester.localeCompare(a.semester);
+        });
+
+        const completedItems = sortedItems.filter(item => item.status === 'Đã hoàn thành');
+        const inProgressItems = sortedItems.filter(item => item.status === 'Đang học');
+
+        const totalCredits = sortedItems.reduce((sum, item) => sum + (item.credit || 0), 0);
+        const completedCredits = completedItems.reduce((sum, item) => sum + (item.credit || 0), 0);
+
+        return {
+            studentId: first?.studentId || 0,
+            studentCode: first?.studentCode || '',
+            studentName: first?.studentName || '',
+            gpa: this.calculateGpa(sortedItems),
+            totalCredits,
+            completedCredits,
+            gradeItems: sortedItems,
+            totalCourses: sortedItems.length,
+            completedCourses: completedItems.length,
+            inProgressCourses: inProgressItems.length
+        };
+    }
+
+    private applyGradesData(data: StudentGrades): void {
+        this.grades = data;
+        this.displayGpa = this.resolveDisplayGpa(data);
+        this.semesterFilter = '';
+        this.filterGrades();
+        this.loading = false;
+    }
+
+    private handleGradesError(error: any): void {
+        console.error('Error loading grades:', error);
+        this.error = `Lỗi khi tải bảng điểm: ${error.status} - ${error.message || error.statusText}`;
+        this.loading = false;
+    }
+
+    private createEmptyGrades(): StudentGrades {
+        return {
+            studentId: 0,
+            studentCode: '',
+            studentName: '',
+            gpa: 0,
+            totalCredits: 0,
+            completedCredits: 0,
+            gradeItems: [],
+            totalCourses: 0,
+            completedCourses: 0,
+            inProgressCourses: 0
+        };
     }
 
     private calculateGpa(items: GradeItem[]): number {
