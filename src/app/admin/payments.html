@@ -1,132 +1,148 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Admin'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>💰 Quản lý học phí</h3>
-
-      <div class="header-controls">
-        <!-- Filters -->
-        <div class="filters-container">
-          <div class="filter-group">
-            <label for="statusFilter">Trạng thái:</label>
-            <select id="statusFilter" [(ngModel)]="statusFilter" (change)="onFilterChange()">
-              <option value="">Tất cả</option>
-              <option value="PENDING">Chờ thanh toán</option>
-              <option value="PAID">Đã thanh toán</option>
-              <option value="FAILED">Thất bại</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label for="semesterFilter">Học kỳ:</label>
-            <select id="semesterFilter" [(ngModel)]="semesterFilter" (change)="onFilterChange()">
-              <option value="">Tất cả</option>
-              <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
-                {{ semester.displayName }}
-              </option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label for="searchTerm">Tìm kiếm:</label>
-            <input id="searchTerm" type="text" [(ngModel)]="searchTerm" (input)="onSearchChange()"
-              placeholder="ID thanh toán, mã sinh viên..." class="search-input">
-          </div>
-
-          <!-- Export Button ngay sau thanh tìm kiếm -->
-          <div class="export-container">
-            <button class="btn btn-success" (click)="exportPayments()" [disabled]="loading">
-              <span *ngIf="!loading">📥 Export theo trạng thái</span>
-              <span *ngIf="loading">⏳ Đang tải...</span>
-            </button>
-          </div>
-        </div>
+    <div class="dashboard-header">
+      <div>
+        <h1>💰 Quản lý học phí</h1>
+        <p>Theo dõi, lọc trạng thái thanh toán và xuất báo cáo chi tiết.</p>
+      </div>
+      <div class="dashboard-actions">
+        <button class="btn btn-outline" (click)="loadPayments()" [disabled]="loading">
+          🔄 Làm mới dữ liệu
+        </button>
       </div>
     </div>
 
-    <div class="card-body">
-      <!-- Success/Error Messages -->
-      <div *ngIf="successMessage" class="success-message">✅ {{ successMessage }}</div>
-      <div *ngIf="error" class="error-message">⚠️ {{ error }}</div>
-      <div *ngIf="loading" class="loading-message">⏳ Đang tải dữ liệu...</div>
-
-      <!-- Statistics Cards -->
-      <div *ngIf="statistics" class="statistics-container">
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.totalPayments }}</div>
-            <div class="stat-label">Tổng thanh toán</div>
-          </div>
-        </div>
-
-        <div class="stat-card paid">
-          <div class="stat-icon">✅</div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.paidPayments }}</div>
-            <div class="stat-label">Đã thanh toán</div>
-            <div class="stat-amount">{{ formatCurrency(statistics.paidAmount) }}</div>
-          </div>
-        </div>
-
-        <div class="stat-card pending">
-          <div class="stat-icon">⏳</div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.pendingPayments }}</div>
-            <div class="stat-label">Chờ thanh toán</div>
-            <div class="stat-amount">{{ formatCurrency(statistics.pendingAmount) }}</div>
-          </div>
-        </div>
-
-        <div class="stat-card failed">
-          <div class="stat-icon">❌</div>
-          <div class="stat-content">
-            <div class="stat-number">{{ statistics.failedPayments }}</div>
-            <div class="stat-label">Thất bại</div>
-          </div>
-        </div>
+    <div class="filter-panel">
+      <div class="filter-item">
+        <label for="statusFilter">Trạng thái</label>
+        <select id="statusFilter" class="form-select" [(ngModel)]="statusFilter" (change)="onFilterChange()">
+          <option value="">Tất cả</option>
+          <option value="PENDING">Chờ thanh toán</option>
+          <option value="PAID">Đã thanh toán</option>
+          <option value="FAILED">Thất bại</option>
+        </select>
       </div>
 
-      <!-- Payments Table -->
-      <div *ngIf="!loading" class="table-container">
-        <table class="payments-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Sinh viên</th>
-              <th>Học kỳ</th>
-              <th>Ngày tạo</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let payment of filteredPayments" [ngClass]="'payment-row-' + payment.status.toLowerCase()">
-              <td class="payment-id">#{{ payment.id }}</td>
-              <td class="student-id">{{ payment.studentCode || 'SV' + payment.studentId }}</td>
-              <td class="semester-id">{{ payment.semesterName || 'HK' + payment.semesterId }}</td>
-              <td class="payment-date">{{ formatDate(payment.paymentDate) }}</td>
-              <td class="payment-status">
-                <span class="status-badge" [ngClass]="getStatusBadgeClass(payment.status)">
+      <div class="filter-item">
+        <label for="semesterFilter">Học kỳ</label>
+        <select id="semesterFilter" class="form-select" [(ngModel)]="semesterFilter" (change)="onFilterChange()">
+          <option value="">Tất cả</option>
+          <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
+            {{ semester.displayName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-item stretch">
+        <label for="searchTerm">Tìm kiếm</label>
+        <input id="searchTerm" type="search" class="form-input" [(ngModel)]="searchTerm"
+          (input)="onSearchChange()" placeholder="ID thanh toán, mã sinh viên...">
+      </div>
+
+      <div class="filter-item">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" (click)="exportPayments()" [disabled]="loading">
+          <span *ngIf="!loading">📥 Export theo trạng thái</span>
+          <span *ngIf="loading">⏳ Đang tải...</span>
+        </button>
+      </div>
+    </div>
+
+    <section class="dashboard-content">
+      <div class="insight-grid" *ngIf="statistics">
+        <article class="insight-card primary">
+          <div class="insight-icon">📊</div>
+          <div class="insight-info">
+            <p class="label">Tổng thanh toán</p>
+            <p class="value">{{ statistics.totalPayments }}</p>
+          </div>
+        </article>
+
+        <article class="insight-card success">
+          <div class="insight-icon">✅</div>
+          <div class="insight-info">
+            <div class="value-row">
+              <p class="value">{{ statistics.paidPayments }}</p>
+              <span class="amount">{{ formatCurrency(statistics.paidAmount) }}</span>
+            </div>
+            <p class="label">Đã thanh toán</p>
+          </div>
+        </article>
+
+        <article class="insight-card warning">
+          <div class="insight-icon">⏳</div>
+          <div class="insight-info">
+            <div class="value-row">
+              <p class="value">{{ statistics.pendingPayments }}</p>
+              <span class="amount">{{ formatCurrency(statistics.pendingAmount) }}</span>
+            </div>
+            <p class="label">Chờ thanh toán</p>
+          </div>
+        </article>
+
+        <article class="insight-card danger">
+          <div class="insight-icon">❌</div>
+          <div class="insight-info">
+            <p class="value">{{ statistics.failedPayments }}</p>
+            <p class="label">Thất bại</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="table-shell" [class.loading-state]="loading">
+        <header class="table-title">
+          <div>
+            <h2>Danh sách thanh toán</h2>
+            <p *ngIf="filteredPayments.length">Có {{ filteredPayments.length }} bản ghi khớp điều kiện lọc.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-light" (click)="loadPayments()" [disabled]="loading">🔃 Làm mới</button>
+          </div>
+        </header>
+
+        <div class="table-wrapper">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Sinh viên</th>
+                <th>Học kỳ</th>
+                <th>Ngày tạo</th>
+                <th>Trạng thái</th>
+                <th class="actions-col">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let payment of filteredPayments" [ngClass]="'status-' + payment.status.toLowerCase()">
+                <td>#{{ payment.id }}</td>
+                <td>
+                  <div class="cell-main">{{ payment.studentCode || 'SV' + payment.studentId }}</div>
+                  <span class="cell-sub">SV{{ payment.studentId }}</span>
+                </td>
+                <td>{{ payment.semesterName || 'HK' + payment.semesterId }}</td>
+                <td>{{ formatDate(payment.paymentDate) }}</td>
+                <td>
+                  <span class="status-dot" [ngClass]="getStatusBadgeClass(payment.status)"></span>
                   {{ getStatusText(payment.status) }}
-                </span>
-              </td>
-              <td class="payment-actions">
-                <button class="btn btn-sm btn-primary" (click)="openUpdateModal(payment)" title="Cập nhật trạng thái">
-                  🔄 Cập nhật
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Empty State -->
-        <div *ngIf="filteredPayments.length === 0" class="empty-state">
-          <div class="empty-icon">💰</div>
-          <h4>Không có thanh toán nào</h4>
-          <p>Không tìm thấy thanh toán nào phù hợp với bộ lọc hiện tại.</p>
+                </td>
+                <td class="actions-col">
+                  <button class="btn btn-sm btn-primary" (click)="openUpdateModal(payment)">
+                    🔄 Cập nhật
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="filteredPayments.length === 0">
+                <td colspan="6" class="empty-state">
+                  <div class="empty-icon">💰</div>
+                  <h4>Không có thanh toán nào</h4>
+                  <p>Điều chỉnh bộ lọc và thử lại.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 
   <!-- Update Status Modal -->

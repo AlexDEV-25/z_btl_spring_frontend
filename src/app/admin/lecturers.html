@@ -1,20 +1,14 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>👨‍🏫 Quản lý giảng viên</h3>
-    </div>
-
     <div class="toolbar">
-        <button class="btn btn-secondary" (click)="reset()">
-            🔄 Reset Form
+      <h3>👨‍🏫 Quản lý giảng viên</h3>
+      <span class="spacer"></span>
+      <div class="search-container">
+        <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search lecturers..." />
+        <button class="btn btn-success" (click)="loadLecturers()">
+          🔍 Find
         </button>
-        <span class="spacer"></span>
-        <div class="search-container">
-            <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search lecturers..." />
-            <button class="btn btn-success" (click)="loadLecturers()">
-                🔍 Find
-            </button>
-        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -40,7 +34,7 @@
                 placeholder="Nhập mã giảng viên (ví dụ: GV001)..." required />
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="reset()">
               🔄 Reset
@@ -69,34 +63,28 @@
               </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let l of filteredLecturers; let i = index" (click)="selectForEdit(l)">
-                    <td><strong>{{ i + 1 }}</strong></td>
-                    <td>{{ getUserName(l.userId) }}</td>
-                    <td><strong>{{ l.lecturerCode }}</strong></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button 
-                                type="button" 
-                                class="btn btn-sm btn-success" 
-                                (click)="$event.stopPropagation(); selectForEdit(l)"
-                            >
-                                ✏️ Edit
-                            </button>
-                            <button 
-                                type="button" 
-                                class="btn btn-sm btn-danger" 
-                                (click)="$event.stopPropagation(); remove(l.id)"
-                            >
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="lecturers.length === 0">
-                    <td colspan="4" class="no-data">
-                        📭 No lecturers found
-                    </td>
-                </tr>
+              <tr *ngFor="let l of filteredLecturers; let i = index" (click)="selectForEdit(l)">
+                <td><strong>{{ i + 1 }}</strong></td>
+                <td>{{ getUserName(l.userId) }}</td>
+                <td><strong>{{ l.lecturerCode }}</strong></td>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button" class="btn btn-sm btn-success"
+                      (click)="$event.stopPropagation(); selectForEdit(l)">
+                      ✏️ Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                      (click)="$event.stopPropagation(); remove(l.id)">
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="lecturers.length === 0">
+                <td colspan="4" class="no-data">
+                  📭 No lecturers found
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

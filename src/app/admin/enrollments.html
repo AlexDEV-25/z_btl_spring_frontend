@@ -1,170 +1,162 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" (logoutEvent)="logout()">
-    <div class="scholarship-container">
-        <!-- Hero Header -->
-        <div class="hero-header">
-            <div class="hero-content">
-                <div class="hero-icon">🎓</div>
-                <h1 class="hero-title">Quản lý Học bổng</h1>
-                <p class="hero-subtitle">{{getTableTitle()}} (GPA >= 3.6)</p>
-            </div>
-            <div class="hero-stats" *ngIf="candidates.length > 0">
-                <div class="stat-card">
-                    <div class="stat-number">{{candidates.length}}</div>
-                    <div class="stat-label">Ứng cử viên</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{getAverageGPA() | number:'1.2-2'}}</div>
-                    <div class="stat-label">GPA TB</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">{{getTopGPA() | number:'1.2-2'}}</div>
-                    <div class="stat-label">GPA cao nhất</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Smart Filters -->
-        <div class="smart-filters">
-            <div class="filters-header">
-                <h3>🔍 Bộ lọc {{getTableTitle().toLowerCase()}} (GPA >= 3.6)</h3>
-                <div class="header-actions">
-                    <button class="reset-btn" (click)="resetFilters()" *ngIf="hasActiveFilters()">
-                        <i class="icon">🔄</i> Đặt lại
-                    </button>
-                    <button class="export-btn" (click)="exportScholarshipList()"
-                        [disabled]="!candidates.length || exporting">
-                        <i class="icon">{{exporting ? '📤' : '📊'}}</i>
-                        {{exporting ? 'Đang xuất...' : 'Xuất CSV'}}
-                    </button>
-                </div>
-            </div>
-
-            <div class="filters-grid">
-                <div class="filter-card">
-                    <div class="filter-icon">🏛️</div>
-                    <div class="filter-content">
-                        <label>Khoa</label>
-                        <select [(ngModel)]="selectedDepartmentId" (change)="onFilterChange()" class="modern-select">
-                            <option value="" disabled selected hidden>-- Chọn khoa --</option>
-                            <option value="">Tất cả khoa</option>
-                            <option *ngFor="let dept of departments" [value]="dept.id">{{dept.name}}</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="filter-card">
-                    <div class="filter-icon">📅</div>
-                    <div class="filter-content">
-                        <label>Học kỳ</label>
-                        <select [(ngModel)]="selectedSemester" (change)="onFilterChange()" class="modern-select">
-                            <option value="" disabled selected hidden></option>
-                            <option value="">Tất cả học kỳ</option>
-                            <option *ngFor="let semester of semesters" [value]="semester.semester"> Kỳ
-                                {{semester.semester}}
-                            </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Loading -->
-        <div *ngIf="loading" class="loading-section">
-            <div class="loading-animation">
-                <div class="loading-circle"></div>
-                <div class="loading-circle"></div>
-                <div class="loading-circle"></div>
-            </div>
-            <p class="loading-text">Đang tìm {{getTableTitle().toLowerCase()}} (GPA >= 3.6)...</p>
-        </div>
-
-        <!-- Error -->
-        <div *ngIf="error" class="error-section">
-            <div class="error-icon">❌</div>
-            <h3>Có lỗi xảy ra</h3>
-            <p>{{error}}</p>
-            <button class="retry-btn" (click)="loadScholarshipCandidates()">🔄 Thử lại</button>
-        </div>
-
-        <!-- Results -->
-        <div *ngIf="!loading && candidates.length > 0" class="results-section">
-            <div class="results-header">
-                <h3>🎯 {{getTableTitle()}} ({{candidates.length}} sinh viên)</h3>
-            </div>
-
-            <!-- Table View -->
-            <div class="table-view">
-                <div class="table-container">
-                    <table class="scholarship-table">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Sinh viên</th>
-                                <th>Lớp</th>
-                                <th>Khoa</th>
-                                <th>GPA</th>
-                                <th>Tín chỉ</th>
-                                <th>Hoàn thành</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let candidate of candidates; let i = index" class="top-1">
-                                <td class="rank-cell">
-                                    <div class="rank-badge gold">
-                                        <!-- Số thứ tự -->
-                                        <span class="rank-number">{{ i + 1 }}</span>
-
-                                        <!-- Icon vàng -->
-                                        <span class="rank-icon">🥇</span>
-                                    </div>
-                                </td>
-
-                                <td class="student-cell">
-                                    <div class="student-info">
-                                        <div class="student-name">{{candidate.fullName}}</div>
-                                        <div class="student-code">{{candidate.studentCode}}</div>
-                                    </div>
-                                </td>
-
-                                <td class="class-cell">{{candidate.className}}</td>
-                                <td class="department-cell">{{candidate.departmentName}}</td>
-
-                                <td class="gpa-cell">
-                                    <div class="gpa-badge" [class.excellent]="candidate.gpa >= 3.6"
-                                        [class.good]="candidate.gpa >= 3.2 && candidate.gpa < 3.6"
-                                        [class.average]="candidate.gpa < 3.2">
-                                        {{candidate.gpa | number:'1.2-2'}}
-                                    </div>
-                                </td>
-
-                                <td class="credits-cell">{{candidate.totalCredits}}</td>
-
-                                <td class="completion-cell">
-                                    <div class="completion-info">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" [style.width.%]="getCompletionRate(candidate)">
-                                            </div>
-                                        </div>
-                                        <span class="completion-text">
-                                            {{candidate.completedCredits}}/{{candidate.totalCredits}}
-                                            ({{getCompletionRate(candidate) | number:'1.0-0'}}%)
-                                        </span>
-                                    </div>
-                                </td>
-                            </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- No Results -->
-        <div *ngIf="!loading && !error && candidates.length === 0 && searchPerformed" class="no-results">
-            <div class="no-results-icon">🎓</div>
-            <h3>Không có kết quả</h3>
-            <p>Không có sinh viên nào đạt yêu cầu GPA >= 3.6 trong điều kiện được chọn.</p>
-            <button class="search-again-btn" (click)="resetFilters()">🔄 Tìm kiếm lại</button>
-        </div>
+  <div class="main-card">
+    <div class="dashboard-header">
+      <div>
+        <h1>🎓 Quản lý học bổng</h1>
+        <p>Theo dõi danh sách sinh viên nổi bật đạt ngưỡng GPA và xuất báo cáo nhanh.</p>
+      </div>
+      <div class="dashboard-actions">
+        <button class="btn btn-outline" (click)="loadScholarshipCandidates()" [disabled]="loading">
+          🔄 Làm mới dữ liệu
+        </button>
+      </div>
     </div>
+
+    <div class="filter-panel">
+      <div class="filter-item">
+        <label for="departmentFilter">Khoa</label>
+        <select id="departmentFilter" class="form-select" [(ngModel)]="selectedDepartmentId"
+          (change)="onFilterChange()">
+          <option value="">Tất cả khoa</option>
+          <option *ngFor="let dept of departments" [value]="dept.id">{{ dept.name }}</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="semesterFilter">Học kỳ</label>
+        <select id="semesterFilter" class="form-select" [(ngModel)]="selectedSemester"
+          (change)="onFilterChange()">
+          <option value="">Tất cả học kỳ</option>
+          <option *ngFor="let semester of semesters" [value]="semester.semester">Kỳ {{ semester.semester }}</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label>&nbsp;</label>
+        <div class="button-stack">
+          <button class="btn btn-light" (click)="resetFilters()" [disabled]="!hasActiveFilters()">
+            ♻️ Xóa bộ lọc
+          </button>
+          <button class="btn btn-primary" (click)="exportScholarshipList()"
+            [disabled]="!candidates.length || exporting">
+            <span *ngIf="!exporting">📊 Xuất CSV</span>
+            <span *ngIf="exporting">⏳ Đang xuất...</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <section class="dashboard-content">
+      <div class="alert error" *ngIf="error">
+        <div class="alert-icon">❌</div>
+        <div class="alert-info">
+          <strong>Không thể tải dữ liệu.</strong>
+          <span>{{ error }}</span>
+        </div>
+        <button class="btn btn-light" (click)="loadScholarshipCandidates()">🔄 Thử lại</button>
+      </div>
+
+      <div class="insight-grid" *ngIf="candidates.length">
+        <article class="insight-card primary">
+          <div class="insight-icon">👥</div>
+          <div class="insight-info">
+            <p class="label">Ứng cử viên</p>
+            <p class="value">{{ candidates.length }}</p>
+          </div>
+        </article>
+
+        <article class="insight-card success">
+          <div class="insight-icon">📈</div>
+          <div class="insight-info">
+            <p class="label">GPA trung bình</p>
+            <p class="value">{{ getAverageGPA() | number:'1.2-2' }}</p>
+          </div>
+        </article>
+
+        <article class="insight-card warning">
+          <div class="insight-icon">🏅</div>
+          <div class="insight-info">
+            <p class="label">GPA cao nhất</p>
+            <p class="value">{{ getTopGPA() | number:'1.2-2' }}</p>
+          </div>
+        </article>
+      </div>
+
+      <div class="table-shell" [class.loading-state]="loading">
+        <header class="table-title">
+          <div>
+            <h2>{{ getTableTitle() }}</h2>
+            <p *ngIf="candidates.length">Có {{ candidates.length }} sinh viên đáp ứng tiêu chí GPA.</p>
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-light" (click)="loadScholarshipCandidates()" [disabled]="loading">🔃 Làm mới</button>
+          </div>
+        </header>
+
+        <ng-container *ngIf="!loading; else loadingTemplate">
+          <div class="table-wrapper" *ngIf="candidates.length; else emptyTemplate">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Sinh viên</th>
+                  <th>Khoa</th>
+                  <th>Lớp</th>
+                  <th>GPA</th>
+                  <th>Tín chỉ</th>
+                  <th>Hoàn thành</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let candidate of candidates; let i = index">
+                  <td>#{{ i + 1 }}</td>
+                  <td>
+                    <div class="cell-main">{{ candidate.fullName }}</div>
+                    <span class="cell-sub">{{ candidate.studentCode }}</span>
+                  </td>
+                  <td>{{ candidate.departmentName }}</td>
+                  <td>{{ candidate.className }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="{
+                        'badge-success': candidate.gpa >= 3.6,
+                        'badge-warning': candidate.gpa >= 3.2 && candidate.gpa < 3.6,
+                        'badge-neutral': candidate.gpa < 3.2
+                      }">
+                      {{ candidate.gpa | number:'1.2-2' }}
+                    </span>
+                  </td>
+                  <td>{{ candidate.totalCredits }}</td>
+                  <td>
+                    <div class="progress-inline">
+                      <div class="progress-bar">
+                        <div class="progress-fill" [style.width.%]="getCompletionRate(candidate)"></div>
+                      </div>
+                      <span class="progress-text">{{ candidate.completedCredits }}/{{ candidate.totalCredits }}
+                        ({{ getCompletionRate(candidate) | number:'1.0-0' }}%)</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
+      </div>
+    </section>
+  </div>
+
+  <ng-template #loadingTemplate>
+    <div class="placeholder">
+      <div class="placeholder-row" *ngFor="let skeleton of skeletonRows"> </div>
+      <p>Đang tải danh sách {{ getTableTitle().toLowerCase() }}...</p>
+    </div>
+  </ng-template>
+
+  <ng-template #emptyTemplate>
+    <div class="empty-state">
+      <div class="empty-icon">🎓</div>
+      <h4>Không có kết quả phù hợp</h4>
+      <p>Điều chỉnh bộ lọc hoặc thử lại sau.</p>
+      <button class="btn btn-primary" (click)="resetFilters()">🔄 Đặt lại bộ lọc</button>
+    </div>
+  </ng-template>
 </app-layout>

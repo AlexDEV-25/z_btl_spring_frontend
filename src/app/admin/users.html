@@ -1,13 +1,7 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>👤 Quản lý người dùng</h3>
-    </div>
-
     <div class="toolbar">
-      <button class="btn btn-secondary" (click)="reset()">
-        🔄 Reset Form
-      </button>
+      <h3>👤 Quản lý người dùng</h3>
       <span class="spacer"></span>
       <div class="search-container">
         <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search users..." />
@@ -26,8 +20,8 @@
           <div class="form-grid grid-3">
             <div class="form-group">
               <label class="form-label">👤 Tên đăng nhập</label>
-              <input class="form-input" [(ngModel)]="form.username" name="username"
-                placeholder="Nhập tên đăng nhập..." required />
+              <input class="form-input" [(ngModel)]="form.username" name="username" placeholder="Nhập tên đăng nhập..."
+                required />
             </div>
 
             <div class="form-group">
@@ -88,11 +82,10 @@
 
             <div class="form-group">
               <label class="form-label">🏠 Địa chỉ</label>
-              <input class="form-input" [(ngModel)]="form.address" name="address"
-                placeholder="Nhập địa chỉ..." />
+              <input class="form-input" [(ngModel)]="form.address" name="address" placeholder="Nhập địa chỉ..." />
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="reset()">
               🔄 Reset

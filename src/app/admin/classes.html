@@ -1,20 +1,16 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>🏢 Quản lý lớp học</h3>
-    </div>
+
 
     <div class="toolbar">
-        <button class="btn btn-secondary" (click)="reset()">
-            🔄 Reset Form
+      <h3>🏢 Quản lý lớp học</h3>
+      <span class="spacer"></span>
+      <div class="search-container">
+        <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search classes..." />
+        <button class="btn btn-success" (click)="loadClasses()">
+          🔍 Find
         </button>
-        <span class="spacer"></span>
-        <div class="search-container">
-            <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search classes..." />
-            <button class="btn btn-success" (click)="loadClasses()">
-                🔍 Find
-            </button>
-        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -26,18 +22,18 @@
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">🏷️ Tên lớp</label>
-              <input class="form-input" [(ngModel)]="form.name" name="name" 
+              <input class="form-input" [(ngModel)]="form.name" name="name"
                 placeholder="Nhập tên lớp (ví dụ: CNTT-K65)..." required />
             </div>
 
             <div class="form-group">
               <label class="form-label">📅 Năm học</label>
-              <input class="form-input" [(ngModel)]="form.year" name="year" 
-                placeholder="Nhập năm học (ví dụ: 2024-2025)..."
-                pattern="^[0-9]{4}-[0-9]{4}$" title="Định dạng: YYYY-YYYY" required />
+              <input class="form-input" [(ngModel)]="form.year" name="year"
+                placeholder="Nhập năm học (ví dụ: 2024-2025)..." pattern="^[0-9]{4}-[0-9]{4}$"
+                title="Định dạng: YYYY-YYYY" required />
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="reset()">
               🔄 Reset
@@ -66,28 +62,28 @@
               </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let c of filteredClasses; let i = index" (click)="selectForEdit(c)">
-                    <td><strong>{{ i + 1 }}</strong></td>
-                    <td><strong>{{ c.name }}</strong></td>
-                    <td>{{ c.year }}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button type="button" class="btn btn-sm btn-success"
-                                (click)="$event.stopPropagation(); selectForEdit(c)">
-                                ✏️ Edit
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger"
-                                (click)="$event.stopPropagation(); remove(c.id)">
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="classes.length === 0">
-                    <td colspan="4" class="no-data">
-                        📭 No classes found
-                    </td>
-                </tr>
+              <tr *ngFor="let c of filteredClasses; let i = index" (click)="selectForEdit(c)">
+                <td><strong>{{ i + 1 }}</strong></td>
+                <td><strong>{{ c.name }}</strong></td>
+                <td>{{ c.year }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button" class="btn btn-sm btn-success"
+                      (click)="$event.stopPropagation(); selectForEdit(c)">
+                      ✏️ Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                      (click)="$event.stopPropagation(); remove(c.id)">
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="classes.length === 0">
+                <td colspan="4" class="no-data">
+                  📭 No classes found
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

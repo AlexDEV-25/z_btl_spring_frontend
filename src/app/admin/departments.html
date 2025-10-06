@@ -1,11 +1,7 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>🏛️ Quản lý khoa</h3>
-    </div>
-
     <div class="toolbar">
-      <button class="btn btn-secondary" (click)="reset()">🔄 Reset Form</button>
+      <h3>🏛️ Quản lý khoa</h3>
       <span class="spacer"></span>
       <div class="search-container">
         <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search departments..." />
@@ -13,68 +9,69 @@
       </div>
     </div>
 
-  <div class="card">
-    <div class="card-header">
-      <h4>➕ Thêm/Sửa khoa</h4>
-    </div>
-    <div class="card-body">
-      <form class="form-container" (ngSubmit)="save()">
-        <div class="form-grid grid-2">
-          <div class="form-group">
-            <label class="form-label">🏷️ Mã khoa</label>
-            <input class="form-input" [(ngModel)]="form.code" name="code" 
-              placeholder="Nhập mã khoa (ví dụ: CNTT)..." required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">📛 Tên khoa</label>
-            <input class="form-input" [(ngModel)]="form.name" name="name" 
-              placeholder="Nhập tên khoa..." required />
-          </div>
-        </div>
-        
-        <div class="form-actions">
-          <button type="button" class="btn btn-secondary" (click)="reset()">
-            🔄 Reset
-          </button>
-          <button type="submit" class="btn btn-primary">
-            {{ editingId ? '💾 Cập nhật' : '➕ Thêm mới' }}
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <h4>📋 Danh sách khoa</h4>
-    </div>
-    <div class="card-body">
-      <div class="table-responsive">
-    <table class="data-table departments-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>🏷️ Mã khoa</th>
-          <th>📛 Tên khoa</th>
-          <th>⚙️ Thao tác</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let d of filteredDepartments; let i = index" (click)="selectForEdit(d)">
-          <td><strong>{{ i + 1 }}</strong></td>
-          <td><strong>{{ d.code }}</strong></td>
-          <td>{{ d.name }}</td>
-          <td>
-            <div class="action-buttons">
-              <button type="button" class="btn btn-sm btn-success" (click)="$event.stopPropagation(); selectForEdit(d)">✏️ Edit</button>
-              <button type="button" class="btn btn-sm btn-danger" (click)="$event.stopPropagation(); remove(d.id)">🗑️ Delete</button>
+    <div class="card">
+      <div class="card-header">
+        <h4>➕ Thêm/Sửa khoa</h4>
+      </div>
+      <div class="card-body">
+        <form class="form-container" (ngSubmit)="save()">
+          <div class="form-grid grid-2">
+            <div class="form-group">
+              <label class="form-label">🏷️ Mã khoa</label>
+              <input class="form-input" [(ngModel)]="form.code" name="code" placeholder="Nhập mã khoa (ví dụ: CNTT)..."
+                required />
             </div>
-          </td>
-        </tr>
-        <tr *ngIf="departments.length === 0">
-          <td colspan="4" class="no-data">📭 No departments found</td>
-        </tr>
+
+            <div class="form-group">
+              <label class="form-label">📛 Tên khoa</label>
+              <input class="form-input" [(ngModel)]="form.name" name="name" placeholder="Nhập tên khoa..." required />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="reset()">
+              🔄 Reset
+            </button>
+            <button type="submit" class="btn btn-primary">
+              {{ editingId ? '💾 Cập nhật' : '➕ Thêm mới' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h4>📋 Danh sách khoa</h4>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="data-table departments-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>🏷️ Mã khoa</th>
+                <th>📛 Tên khoa</th>
+                <th>⚙️ Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of filteredDepartments; let i = index" (click)="selectForEdit(d)">
+                <td><strong>{{ i + 1 }}</strong></td>
+                <td><strong>{{ d.code }}</strong></td>
+                <td>{{ d.name }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button" class="btn btn-sm btn-success"
+                      (click)="$event.stopPropagation(); selectForEdit(d)">✏️ Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                      (click)="$event.stopPropagation(); remove(d.id)">🗑️ Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="departments.length === 0">
+                <td colspan="4" class="no-data">📭 No departments found</td>
+              </tr>
             </tbody>
           </table>
         </div>

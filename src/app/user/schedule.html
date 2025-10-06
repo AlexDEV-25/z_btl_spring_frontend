@@ -1,8 +1,11 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Sinh viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>📅 Thời khóa biểu của tôi</h3>
-      <div class="header-controls">
+    <div class="grade-page-header">
+      <div>
+        <h3>📅 Thời khóa biểu của tôi</h3>
+        <p class="subtitle">Theo dõi lịch học và thời lượng tín chỉ theo từng học kỳ</p>
+      </div>
+      <div class="header-actions">
         <select class="semester-select" [(ngModel)]="selectedSemester" (change)="onSemesterChange()">
           <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
             {{ semester.displayName }}
@@ -26,7 +29,7 @@
         </div>
         <div class="info-row">
           <span class="info-label">🎯 Tổng tín chỉ:</span>
-          <span class="info-value">{{ schedule.totalCredits }} <span class="credit-badge">TC</span></span>
+          <span class="info-value">{{ schedule.totalCredits }} <span class="credit-badge credit-badge--compact">TC</span></span>
         </div>
       </div>
 

@@ -49,6 +49,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     error = '';
     searchPerformed = false;
     userName = 'Admin';
+    skeletonRows = Array.from({ length: 6 }, (_, index) => index);
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [
