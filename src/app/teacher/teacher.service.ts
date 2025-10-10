@@ -31,6 +31,8 @@ export interface StudentInfo {
     componentScore1?: number | null;
     componentScore2?: number | null;
     finalExamScore?: number | null;
+    totalScore?: number | null;
+    scoreCoefficient4?: number | null;
 }
 
 export interface EnrollmentDTO {
@@ -48,6 +50,8 @@ export interface Enrollment {
     studentId: number;
     courseId: number;
     grade: string | null;
+    totalScore?: number | null;
+    scoreCoefficient4?: number | null;
 }
 
 export interface SemesterInfo {

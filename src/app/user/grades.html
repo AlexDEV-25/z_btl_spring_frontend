@@ -7,7 +7,7 @@
       </div>
       <div class="header-actions">
         <select class="semester-select" [(ngModel)]="selectedSemester" (change)="onSemesterChange()">
-          <option value="">Tất cả học kỳ</option>
+          <option value="">Chọn học kỳ</option>
           <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
             {{ semester.displayName }}
           </option>
@@ -44,7 +44,7 @@
           <div class="summary-card">
             <div>
               <p class="summary-label">Đã hoàn thành</p>
-              <h3 class="summary-value">{{ getCompletedCount() }}</h3>
+              <h3 class="summary-value">{{ grades.completedCourses }}</h3>
               <span class="summary-subtext">Môn học kết thúc</span>
             </div>
             <div class="summary-icon success">✅</div>
@@ -53,7 +53,7 @@
           <div class="summary-card">
             <div>
               <p class="summary-label">Đang học</p>
-              <h3 class="summary-value">{{ getInProgressCount() }}</h3>
+              <h3 class="summary-value">{{ grades.inProgressCourses }}</h3>
               <span class="summary-subtext">Môn cần theo dõi</span>
             </div>
             <div class="summary-icon warning">📖</div>
@@ -71,7 +71,7 @@
           </div>
           <div>
             <span class="meta-label">Học kỳ đang xem</span>
-            <span class="meta-value">{{ semesterFilter || selectedSemester || 'Tất cả học kỳ' }}</span>
+            <span class="meta-value">{{ semesterFilter || selectedSemester }}</span>
           </div>
         </section>
 
@@ -147,14 +147,13 @@
             </tbody>
           </table>
         </div>
-
         <section class="grades-insights" *ngIf="grades.gradeItems.length > 0">
           <div class="insight-card">
             <div class="insight-icon">📈</div>
             <div>
               <h4>Thống kê môn học</h4>
-              <p>{{ grades.gradeItems.length }} môn học, {{ getCompletedCount() }} đã hoàn thành và {{
-                getInProgressCount() }} đang học.</p>
+              <p>{{ grades.gradeItems.length }} môn học, {{ grades.completedCourses }} đã hoàn thành và {{
+                grades.inProgressCourses }} đang học.</p>
             </div>
           </div>
           <div class="insight-card">

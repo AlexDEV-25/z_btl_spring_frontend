@@ -124,6 +124,7 @@ export class UserPaymentComponent implements OnInit {
         }
     }
 
+    // Backend đã xử lý tất cả logic tính toán và format, frontend chỉ hiển thị
     formatCurrency(amount: number): string {
         return new Intl.NumberFormat('vi-VN', {
             style: 'currency',
@@ -132,29 +133,21 @@ export class UserPaymentComponent implements OnInit {
     }
 
     getStatusBadgeClass(status: string): string {
-        switch (status) {
-            case 'PAID':
-                return 'status-paid';
-            case 'PENDING':
-                return 'status-pending';
-            case 'FAILED':
-                return 'status-failed';
-            default:
-                return 'status-unknown';
-        }
+        const statusMap: {[key: string]: string} = {
+            'PAID': 'status-paid',
+            'PENDING': 'status-pending', 
+            'FAILED': 'status-failed'
+        };
+        return statusMap[status] || 'status-unknown';
     }
 
     getStatusText(status: string): string {
-        switch (status) {
-            case 'PAID':
-                return '✅ Đã thanh toán';
-            case 'PENDING':
-                return '⏳ Chờ thanh toán';
-            case 'FAILED':
-                return '❌ Thanh toán thất bại';
-            default:
-                return '❓ Không xác định';
-        }
+        const statusTextMap: {[key: string]: string} = {
+            'PAID': '✅ Đã thanh toán',
+            'PENDING': '⏳ Chờ thanh toán',
+            'FAILED': '❌ Thanh toán thất bại'
+        };
+        return statusTextMap[status] || '❓ Không xác định';
     }
 
     logout() {

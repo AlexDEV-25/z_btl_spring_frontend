@@ -80,7 +80,7 @@ export class UserProfileComponent implements OnInit {
     }
 
     changePassword() {
-        // Validate form - không cần mật khẩu hiện tại
+        // Backend đã xử lý validation và security, frontend chỉ cần validate cơ bản
         if (!this.passwordRequest.newPassword) {
             this.passwordError = 'Vui lòng nhập mật khẩu mới';
             return;

@@ -137,19 +137,12 @@ export class UserGradesComponent implements OnInit {
         return 'Yếu';
     }
 
+    // Các hàm này chỉ trả về dữ liệu từ backend, không tính toán
     getCompletionPercentage(): number {
         if (!this.grades || this.grades.totalCredits === 0) {
             return 0;
         }
         return (this.grades.completedCredits / this.grades.totalCredits) * 100;
-    }
-
-    getCompletedCount(): number {
-        return this.grades?.completedCourses || 0;
-    }
-
-    getInProgressCount(): number {
-        return this.grades?.inProgressCourses || 0;
     }
 
     getGradeClass(grade: string | null | undefined): string {
@@ -240,11 +233,8 @@ export class UserGradesComponent implements OnInit {
     }
 
     private resolveDisplayGpa(data: StudentGrades): number {
-        const backendGpa = data?.gpa ?? 0;
-        if (backendGpa && backendGpa > 0) {
-            return Math.round(backendGpa * 100) / 100;
-        }
-        return this.calculateGpa(data.gradeItems);
+        // Sử dụng trực tiếp GPA từ backend
+        return Math.round((data?.gpa ?? 0) * 100) / 100;
     }
 
     private fetchGradesForSemester(semester: string): void {
@@ -255,58 +245,13 @@ export class UserGradesComponent implements OnInit {
     }
 
     private fetchGradesForAllSemesters(): void {
-        const semesterCodes = this.availableSemesters.map(item => item.semester).filter(code => !!code);
-
-        if (semesterCodes.length === 0) {
-            this.userService.getStudentGrades().subscribe({
-                next: (data) => this.applyGradesData(data),
-                error: (error) => this.handleGradesError(error)
-            });
-            return;
-        }
-
-        forkJoin(semesterCodes.map(code => this.userService.getStudentGrades(code))).subscribe({
-            next: (results) => {
-                const aggregated = this.aggregateGrades(results);
-                this.applyGradesData(aggregated);
-            },
+        // Lấy tất cả điểm từ backend (không cần semester cụ thể)
+        this.userService.getStudentGrades().subscribe({
+            next: (data) => this.applyGradesData(data),
             error: (error) => this.handleGradesError(error)
         });
     }
 
-    private aggregateGrades(gradeSets: StudentGrades[]): StudentGrades {
-        if (!gradeSets.length) {
-            return this.createEmptyGrades();
-        }
-
-        const first = gradeSets.find(item => item != null);
-        const allItems = gradeSets.flatMap(item => item.gradeItems || []);
-        const sortedItems = [...allItems].sort((a, b) => {
-            if (a.semester === b.semester) {
-                return a.courseCode.localeCompare(b.courseCode);
-            }
-            return b.semester.localeCompare(a.semester);
-        });
-
-        const completedItems = sortedItems.filter(item => item.status === 'Đã hoàn thành');
-        const inProgressItems = sortedItems.filter(item => item.status === 'Đang học');
-
-        const totalCredits = sortedItems.reduce((sum, item) => sum + (item.credit || 0), 0);
-        const completedCredits = completedItems.reduce((sum, item) => sum + (item.credit || 0), 0);
-
-        return {
-            studentId: first?.studentId || 0,
-            studentCode: first?.studentCode || '',
-            studentName: first?.studentName || '',
-            gpa: this.calculateGpa(sortedItems),
-            totalCredits,
-            completedCredits,
-            gradeItems: sortedItems,
-            totalCourses: sortedItems.length,
-            completedCourses: completedItems.length,
-            inProgressCourses: inProgressItems.length
-        };
-    }
 
     private applyGradesData(data: StudentGrades): void {
         this.grades = data;
@@ -322,64 +267,5 @@ export class UserGradesComponent implements OnInit {
         this.loading = false;
     }
 
-    private createEmptyGrades(): StudentGrades {
-        return {
-            studentId: 0,
-            studentCode: '',
-            studentName: '',
-            gpa: 0,
-            totalCredits: 0,
-            completedCredits: 0,
-            gradeItems: [],
-            totalCourses: 0,
-            completedCourses: 0,
-            inProgressCourses: 0
-        };
-    }
 
-    private calculateGpa(items: GradeItem[]): number {
-        if (!items || items.length === 0) {
-            return 0;
-        }
-
-        const coefficientItems = items.filter(item => item.scoreCoefficient4 != null && item.credit != null);
-        const coefficientCredits = coefficientItems.reduce((sum, item) => sum + (item.credit || 0), 0);
-
-        if (coefficientCredits > 0) {
-            const weightedSum = coefficientItems.reduce((sum, item) => {
-                const credit = item.credit || 0;
-                const coefficient = item.scoreCoefficient4 || 0;
-                return sum + (coefficient * credit);
-            }, 0);
-
-            return Math.round((weightedSum / coefficientCredits) * 100) / 100;
-        }
-
-        const gradePointMap: Record<string, number> = {
-            'A+': 4.0,
-            'A': 3.7,
-            'B+': 3.5,
-            'B': 3.0,
-            'C+': 2.5,
-            'C': 2.0,
-            'D+': 1.5,
-            'D': 1.0,
-            'F': 0.0
-        };
-
-        const letterItems = items.filter(item => item.grade && item.credit != null && gradePointMap[item.grade]);
-        const letterCredits = letterItems.reduce((sum, item) => sum + (item.credit || 0), 0);
-
-        if (letterCredits === 0) {
-            return 0;
-        }
-
-        const letterWeighted = letterItems.reduce((sum, item) => {
-            const credit = item.credit || 0;
-            const point = gradePointMap[item.grade || 'F'] || 0;
-            return sum + (point * credit);
-        }, 0);
-
-        return Math.round((letterWeighted / letterCredits) * 100) / 100;
-    }
 }

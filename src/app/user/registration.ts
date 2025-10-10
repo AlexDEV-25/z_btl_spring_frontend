@@ -92,94 +92,40 @@ export class UserRegistrationComponent implements OnInit {
         }
     }
 
+    // Backend đã xử lý logic phân loại courses, frontend chỉ cần hiển thị
     private partitionCourses(available: CourseInfo[], grades: StudentGrades, payment: PaymentInfo | null): void {
-        this.availableCourses = [];
-        this.enrolledCourses = [];
-        this.pendingCourses = [];
-        this.completedCourses = [];
+        // Sử dụng trực tiếp dữ liệu từ backend thay vì tính toán phức tạp
+        this.availableCourses = available.filter(course => course.canRegister);
 
-        const gradeItems = grades?.gradeItems ?? [];
-        const gradeMap = new Map<number, GradeItem>();
-        const completedIds = new Set<number>();
-        const assumedEnrolledIds = new Set<number>();
-        const completedMap = new Map<number, CourseInfo>();
-
-        gradeItems.forEach(item => {
-            if (!item || !item.courseId) {
-                return;
-            }
-            gradeMap.set(item.courseId, item);
-
-            if (item.grade != null) {
-                completedIds.add(item.courseId);
-                if (!completedMap.has(item.courseId)) {
-                    completedMap.set(item.courseId, this.mapGradeItemToCourseInfo(item));
-                }
-            } else {
-                assumedEnrolledIds.add(item.courseId);
-            }
-        });
-
-        this.completedCourses = Array.from(completedMap.values());
-
+        // Lấy thông tin từ payment details nếu có
         const paymentDetails = payment?.courseDetails ?? [];
-        const enrolledIds = new Set<number>();
-        const pendingIds = new Set<number>();
 
-        paymentDetails.forEach(detail => {
-            if (!detail || !detail.courseId) {
-                return;
-            }
-
-            if (detail.enrollmentStatus === 'ENROLLED') {
-                enrolledIds.add(detail.courseId);
-            } else if (detail.enrollmentStatus === 'PENDING_PAYMENT') {
-                pendingIds.add(detail.courseId);
-            }
-        });
-
-        const courseLookup = new Map<number, CourseInfo>();
-        available.forEach(course => {
-            courseLookup.set(course.courseId, course);
-        });
-
-        const finalEnrolledIds = new Set<number>([...enrolledIds]);
-        assumedEnrolledIds.forEach(id => {
-            if (!pendingIds.has(id) && !completedIds.has(id)) {
-                finalEnrolledIds.add(id);
-            }
-        });
-
-        finalEnrolledIds.forEach(courseId => {
-            const course = this.composeCourseInfo(courseId, courseLookup, gradeMap);
-            this.enrolledCourses.push({
-                ...course,
-                canRegister: false,
-                canUnregister: false,
-                reason: 'Đang học'
+        this.enrolledCourses = paymentDetails
+            .filter(detail => detail.enrollmentStatus === 'ENROLLED')
+            .map(detail => {
+                const courseInfo = this.mapPaymentDetailToCourseInfo(detail, available);
+                return {
+                    ...courseInfo,
+                    canUnregister: false, // Môn đã enrolled không thể hủy
+                    reason: 'Đang học'
+                };
             });
-        });
 
-        pendingIds.forEach(courseId => {
-            const course = this.composeCourseInfo(courseId, courseLookup, gradeMap);
-            this.pendingCourses.push({
-                ...course,
-                canRegister: false,
-                canUnregister: true,
-                reason: 'Chờ thanh toán'
+        this.pendingCourses = paymentDetails
+            .filter(detail => detail.enrollmentStatus === 'PENDING_PAYMENT')
+            .map(detail => {
+                const courseInfo = this.mapPaymentDetailToCourseInfo(detail, available);
+                return {
+                    ...courseInfo,
+                    canUnregister: true, // Môn pending có thể hủy
+                    reason: 'Chờ thanh toán'
+                };
             });
-        });
 
-        const unavailableIds = new Set<number>([...completedIds, ...finalEnrolledIds, ...pendingIds]);
-
-        this.availableCourses = available
-            .filter(course => !unavailableIds.has(course.courseId))
-            .map(course => ({
-                ...course,
-                canRegister: true,
-                canUnregister: false,
-                reason: undefined
-            }));
+        // Lấy môn đã hoàn thành từ grades
+        this.completedCourses = (grades?.gradeItems ?? [])
+            .filter(item => item.grade != null)
+            .map(item => this.mapGradeItemToCourseInfo(item));
     }
 
     private mapGradeItemToCourseInfo(item: GradeItem): CourseInfo {
@@ -194,23 +140,26 @@ export class UserRegistrationComponent implements OnInit {
         };
     }
 
-    private composeCourseInfo(courseId: number, courseLookup: Map<number, CourseInfo>, gradeMap: Map<number, GradeItem>): CourseInfo {
-        const course = courseLookup.get(courseId);
+    // Helper method để map payment detail sang course info
+    private mapPaymentDetailToCourseInfo(detail: any, available: CourseInfo[]): CourseInfo {
+        const course = available.find(c => c.courseId === detail.courseId);
         if (course) {
-            return course;
+            // Nếu tìm thấy course trong available list, cập nhật canUnregister
+            return {
+                ...course,
+                canRegister: false,
+                canUnregister: detail.enrollmentStatus === 'PENDING_PAYMENT'
+            };
         }
-
-        const gradeItem = gradeMap.get(courseId);
-        if (gradeItem) {
-            return this.mapGradeItemToCourseInfo(gradeItem);
-        }
-
+        
+        // Nếu không tìm thấy, tạo course info mới
         return {
-            courseId,
-            courseCode: '---',
-            courseName: 'Môn học chưa rõ',
-            credit: 0,
-            canRegister: false
+            courseId: detail.courseId,
+            courseCode: detail.courseCode || '---',
+            courseName: detail.courseName || 'Môn học chưa rõ',
+            credit: detail.credits || 0,
+            canRegister: false,
+            canUnregister: detail.enrollmentStatus === 'PENDING_PAYMENT'
         };
     }
 
@@ -266,19 +215,13 @@ export class UserRegistrationComponent implements OnInit {
         }
     }
 
+    // Các hàm helper đơn giản - không cần tính toán phức tạp
     getTotalEnrolledCredits(): number {
         return [...this.enrolledCourses, ...this.pendingCourses].reduce((total, course) => total + (course.credit || 0), 0);
     }
+
     getAvailableCoursesCount(): number {
-        return this.availableCourses.filter(c => c.canRegister).length;
-    }
-
-    isEnrolled(courseId: number): boolean {
-        return this.enrolledCourses.some(c => c.courseId === courseId);
-    }
-
-    isCompleted(courseId: number): boolean {
-        return this.completedCourses.some(c => c.courseId === courseId);
+        return this.availableCourses.length; // Backend đã filter canRegister
     }
 
     logout() {

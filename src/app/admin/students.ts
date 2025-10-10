@@ -133,33 +133,6 @@ export class AdminStudentsComponent {
         this.buildAvailableUsers();
     }
 
-    // save() {
-    //     const trimmedCode = (this.form.studentCode || '').trim().toUpperCase();
-    //     const dob = (this.form.dateOfBirth || '').trim();
-    //     const addr = (this.form.address || '').trim();
-    //     const payload: Student = {
-    //         userId: this.form.userId ? Number(this.form.userId) : null,
-    //         studentCode: trimmedCode,
-    //         classId: this.form.classId ? Number(this.form.classId) : null,
-    //         dateOfBirth: dob ? dob : undefined,
-    //         address: addr ? addr : undefined
-    //     };
-    //     if (!payload.userId || !payload.studentCode || !payload.classId) return;
-
-    //     if (this.editingId) {
-    //         const body: any = { id: this.editingId, ...payload };
-    //         this.http.put(`${this.baseUrl}/${this.editingId}`, body, { responseType: 'text' }).subscribe({
-    //             next: () => { this.loadStudents(); this.reset(); },
-    //             error: err => console.error('Update failed', err)
-    //         });
-    //     } else {
-    //         this.http.post(this.baseUrl, payload, { responseType: 'text' }).subscribe({
-    //             next: () => { this.loadStudents(); this.reset(); },
-    //             error: err => console.error('Create failed', err)
-    //         });
-    //     }
-    // }
-
     save() {
         const trimmedCode = (this.form.studentCode || '').trim().toUpperCase();
         if (!/^[A-Z0-9]{6,10}$/.test(trimmedCode)) {
