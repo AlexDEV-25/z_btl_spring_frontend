@@ -19,6 +19,7 @@ export interface TeacherScheduleInfo {
     classroom: string; // For backward compatibility
     periods: ScheduleTime[]; // New field to store all schedule times
     students: StudentInfo[];
+    gradedCount?: number; // Backend tính sẵn số sinh viên đã có điểm
 }
 
 export interface StudentInfo {

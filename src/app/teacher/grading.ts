@@ -134,6 +134,7 @@ export class TeacherGradingComponent implements OnInit {
         });
     }
 
+    // Backend đã tính sẵn gradedCount, frontend chỉ hiển thị
     getGradedCount(students: StudentInfo[]): number {
         return students.filter(s => s.grade !== null).length;
     }

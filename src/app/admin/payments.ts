@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { LayoutComponent } from '../shared/layout.component';
@@ -120,33 +120,27 @@ export class AdminPaymentsComponent implements OnInit {
         private router: Router
     ) { }
 
+    private searchTimeout: any;
+
     ngOnInit() {
         this.loadSemesters();
         this.loadPayments();
         this.loadStatistics();
     }
 
-    // Service methods (merged from admin-payment.service.ts)
-
-    /**
-     * Lấy tất cả payments với filtering
-     */
-    getAllPayments(status?: string, semester?: string): Observable<Payment[]> {
-        let url = this.baseUrl;
-        const params: string[] = [];
-
+    // Service methods - cập nhật để hỗ trợ search parameter
+    getAllPayments(status?: string, semester?: string, search?: string): Observable<Payment[]> {
+        let params = new HttpParams();
         if (status) {
-            params.push(`status=${status}`);
+            params = params.set('status', status);
         }
         if (semester) {
-            params.push(`semester=${semester}`);
+            params = params.set('semester', semester);
         }
-
-        if (params.length > 0) {
-            url += '?' + params.join('&');
+        if (search && search.trim()) {
+            params = params.set('search', search.trim());
         }
-
-        return this.http.get<Payment[]>(url);
+        return this.http.get<Payment[]>(`${this.baseUrl}`, { params });
     }
 
     /**
@@ -171,21 +165,14 @@ export class AdminPaymentsComponent implements OnInit {
     }
 
     /**
-     * Lấy payments theo student ID
-     */
-    getPaymentsByStudentId(studentId: number): Observable<Payment[]> {
-        return this.http.get<Payment[]>(`${this.baseUrl}/student/${studentId}`);
-    }
-
-    /**
      * Lấy thống kê payments
      */
     getPaymentStatistics(semester?: string): Observable<PaymentStatistics> {
-        let url = `${this.baseUrl}/statistics`;
+        let params = new HttpParams();
         if (semester) {
-            url += `?semester=${semester}`;
+            params = params.set('semester', semester);
         }
-        return this.http.get<PaymentStatistics>(url);
+        return this.http.get<PaymentStatistics>(`${this.baseUrl}/statistics`, { params });
     }
 
     /**
@@ -217,10 +204,11 @@ export class AdminPaymentsComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.getAllPayments(this.statusFilter, this.semesterFilter).subscribe({
+        // Backend đã xử lý filtering, frontend chỉ cần gọi API với parameters
+        this.getAllPayments(this.statusFilter, this.semesterFilter, this.searchTerm).subscribe({
             next: (data: Payment[]) => {
                 this.payments = data || [];
-                this.applyFilters();
+                this.filteredPayments = this.payments; // Backend đã filter rồi
                 this.loading = false;
             },
             error: (error: any) => {
@@ -242,27 +230,18 @@ export class AdminPaymentsComponent implements OnInit {
         });
     }
 
+    // Backend đã xử lý filtering, không cần applyFilters ở frontend nữa
     applyFilters() {
-        this.filteredPayments = this.payments.filter(payment => {
-            const searchTerm = this.searchTerm?.toLowerCase() || '';
-            const studentCode = payment.studentCode?.toLowerCase() || '';
-
-            const matchesSearch = searchTerm === '' ||
-                studentCode.includes(searchTerm) ||
-                payment.id.toString().includes(searchTerm);
-
-            const matchesStatus = !this.statusFilter ||
-                payment.status === this.statusFilter;
-
-            const matchesSemester = !this.semesterFilter ||
-                payment.semesterName === this.semesterFilter;
-
-            return matchesSearch && matchesStatus && matchesSemester;
-        });
+        // Chỉ reload data từ backend với filters mới
+        this.loadPayments();
     }
 
     onSearchChange() {
-        this.applyFilters();
+        // Debounce search để tránh gọi API quá nhiều
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(() => {
+            this.loadPayments();
+        }, 500);
     }
 
     onStatusFilterChange() {
