@@ -19,6 +19,7 @@ export interface TeacherScheduleInfo {
     classroom: string; // For backward compatibility
     periods: ScheduleTime[]; // New field to store all schedule times
     students: StudentInfo[];
+    gradedCount?: number; // Backend tính sẵn số sinh viên đã có điểm
 }
 
 export interface StudentInfo {
@@ -31,6 +32,8 @@ export interface StudentInfo {
     componentScore1?: number | null;
     componentScore2?: number | null;
     finalExamScore?: number | null;
+    totalScore?: number | null;
+    scoreCoefficient4?: number | null;
 }
 
 export interface EnrollmentDTO {
@@ -48,6 +51,8 @@ export interface Enrollment {
     studentId: number;
     courseId: number;
     grade: string | null;
+    totalScore?: number | null;
+    scoreCoefficient4?: number | null;
 }
 
 export interface SemesterInfo {
@@ -102,10 +107,10 @@ export class TeacherService {
                 next: (classes) => {
                     // Use a Map to store unique courses by courseId
                     const uniqueCourses = new Map<number, TeacherScheduleInfo>();
-                    
+
                     classes.forEach(cls => {
                         if (!uniqueCourses.has(cls.courseId)) {
-const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
+                            const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
                             uniqueCourses.set(cls.courseId, {
                                 ...cls,
                                 // For backward compatibility
@@ -123,7 +128,7 @@ const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
                             });
                         }
                     });
-                    
+
                     observer.next(Array.from(uniqueCourses.values()));
                     observer.complete();
                 },

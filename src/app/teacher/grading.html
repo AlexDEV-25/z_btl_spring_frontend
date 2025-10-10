@@ -92,6 +92,8 @@
                 <th>🧮 TP1 (0-10)</th>
                 <th>🧮 TP2 (0-10)</th>
                 <th>📝 Thi CK (0-10)</th>
+                <th>📊 Điểm TK</th>
+                <th>🎯 Điểm chữ</th>
                 <th>⚙️ Thao tác</th>
               </tr>
             </thead>
@@ -103,15 +105,26 @@
                 <td>{{ student.email }}</td>
                 <td>
                   <input type="number" class="score-input" min="0" max="10" step="0.1"
-                    [(ngModel)]="student.componentScore1" placeholder="0.0" (blur)="calculateGrade(student)" />
+                    [(ngModel)]="student.componentScore1" placeholder="0.0" />
                 </td>
                 <td>
                   <input type="number" class="score-input" min="0" max="10" step="0.1"
-                    [(ngModel)]="student.componentScore2" placeholder="0.0" (blur)="calculateGrade(student)" />
+                    [(ngModel)]="student.componentScore2" placeholder="0.0" />
                 </td>
                 <td>
                   <input type="number" class="score-input" min="0" max="10" step="0.1"
-                    [(ngModel)]="student.finalExamScore" placeholder="0.0" (blur)="calculateGrade(student)" />
+                    [(ngModel)]="student.finalExamScore" placeholder="0.0" />
+                </td>
+                <td class="total-score">
+                  <span *ngIf="student.totalScore !== null && student.totalScore !== undefined" class="score-value">
+                    {{ student.totalScore | number:'1.1-1' }}
+                  </span>
+                  <span *ngIf="student.totalScore === null || student.totalScore === undefined"
+                    class="no-score">-</span>
+                </td>
+                <td class="letter-grade">
+                  <span *ngIf="student.grade" class="grade-badge">{{ student.grade }}</span>
+                  <span *ngIf="!student.grade" class="no-grade">-</span>
                 </td>
                 <td>
                   <button class="btn btn-sm btn-success" (click)="saveScores(student)" [disabled]="saving"

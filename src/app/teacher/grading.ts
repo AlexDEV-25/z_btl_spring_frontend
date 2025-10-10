@@ -117,7 +117,10 @@ export class TeacherGradingComponent implements OnInit {
 
         this.teacherService.gradeStudent(req).subscribe({
             next: (enrollment) => {
+                // Cập nhật tất cả thông tin điểm từ backend
                 student.grade = enrollment.grade ?? student.grade;
+                student.totalScore = enrollment.totalScore ?? student.totalScore;
+                student.scoreCoefficient4 = enrollment.scoreCoefficient4 ?? student.scoreCoefficient4;
                 this.saveMessage = 'Đã lưu điểm thành công!';
                 this.saving = false;
                 setTimeout(() => this.saveMessage = '', 3000);
@@ -131,6 +134,7 @@ export class TeacherGradingComponent implements OnInit {
         });
     }
 
+    // Backend đã tính sẵn gradedCount, frontend chỉ hiển thị
     getGradedCount(students: StudentInfo[]): number {
         return students.filter(s => s.grade !== null).length;
     }
@@ -145,18 +149,7 @@ export class TeacherGradingComponent implements OnInit {
         return Math.round((this.getGradedCount(students) / total) * 100);
     }
 
-    // Calculate grade automatically when scores change
-    calculateGrade(student: StudentInfo) {
-        const comp1 = student.componentScore1 ?? 0;
-        const comp2 = student.componentScore2 ?? 0;
-        const final = student.finalExamScore ?? 0;
-
-        // Simple grade calculation: 30% comp1 + 30% comp2 + 40% final
-        if (comp1 > 0 || comp2 > 0 || final > 0) {
-            const totalScore = (comp1 * 0.3) + (comp2 * 0.3) + (final * 0.4);
-            student.grade = (Math.round(totalScore * 100) / 100).toString(); // Convert to string
-        }
-    }
+    // Điểm sẽ được tính tự động bởi backend khi lưu điểm
 
     // Save all scores for all students in the class
     saveAllScores() {
@@ -179,7 +172,10 @@ export class TeacherGradingComponent implements OnInit {
 
             this.teacherService.gradeStudent(req).subscribe({
                 next: (enrollment) => {
+                    // Cập nhật tất cả thông tin điểm từ backend
                     student.grade = enrollment.grade ?? student.grade;
+                    student.totalScore = enrollment.totalScore ?? student.totalScore;
+                    student.scoreCoefficient4 = enrollment.scoreCoefficient4 ?? student.scoreCoefficient4;
                     savedCount++;
 
                     if (savedCount + errorCount === totalStudents) {
@@ -234,7 +230,7 @@ export class TeacherGradingComponent implements OnInit {
                 alert('Có lỗi xảy ra khi xuất bảng điểm!');
             }
         });
-    }     
+    }
 
     logout() {
         if (confirm('🚪 Bạn có chắc chắn muốn đăng xuất?')) {

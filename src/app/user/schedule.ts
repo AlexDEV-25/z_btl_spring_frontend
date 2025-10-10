@@ -109,44 +109,20 @@ export class UserScheduleComponent implements OnInit {
             }
         });
     }
+
+    // Backend đã cung cấp dữ liệu đầy đủ, frontend chỉ cần convert đơn giản
     private toEvents(scheduleItems: ScheduleItem[]) {
-        // Education management colors - matching the interface
         const palette = ['#ff6b35', '#3182ce', '#38a169', '#805ad5', '#319795', '#d53f8c', '#ecc94b'];
         let idx = 0;
 
-        const parsePeriod = (p?: string): { start: number; end: number } => {
-            if (!p) return { start: 1, end: 1 };
-            const m = p.match(/(\d+)\s*-\s*(\d+)/);
-            if (m) {
-                const s = Math.max(1, Math.min(10, Number(m[1])));
-                const e = Math.max(s, Math.min(10, Number(m[2])));
-                return { start: s, end: e };
-            }
-            const n = Number(p);
-            return { start: isNaN(n) ? 1 : n, end: isNaN(n) ? 1 : n };
-        };
-
-        const dayToIndex = (d?: string) => {
-            const dayMap: { [key: string]: number } = {
-                'Thứ 2': 1, 'Monday': 1,
-                'Thứ 3': 2, 'Tuesday': 2,
-                'Thứ 4': 3, 'Wednesday': 3,
-                'Thứ 5': 4, 'Thursday': 4,
-                'Thứ 6': 5, 'Friday': 5,
-                'Thứ 7': 6, 'Saturday': 6,
-                'Chủ nhật': 7, 'Sunday': 7
-            };
-            return dayMap[d || ''] || 1;
-        };
-
         return scheduleItems.map(item => {
-            const { start, end } = parsePeriod(item.period);
+            const { start, end } = this.parsePeriod(item.period);
             const color = palette[idx++ % palette.length];
 
             return {
-                dayIndex: dayToIndex(item.dayOfWeek),
+                dayIndex: this.dayToIndex(item.dayOfWeek),
                 start,
-                end: end + 1, // CSS grid end is exclusive
+                end: end + 1,
                 title: `${item.courseCode} - ${item.courseName}`,
                 lecturer: item.lecturerName,
                 room: item.classroom || item.room || 'Chưa xác định',
@@ -156,23 +132,41 @@ export class UserScheduleComponent implements OnInit {
         });
     }
 
+    private parsePeriod(period?: string): { start: number; end: number } {
+        if (!period) return { start: 1, end: 1 };
+        const match = period.match(/(\d+)\s*-\s*(\d+)/);
+        if (match) {
+            return { start: Number(match[1]), end: Number(match[2]) };
+        }
+        const num = Number(period);
+        return { start: num || 1, end: num || 1 };
+    }
+
+    private dayToIndex(day?: string): number {
+        const dayMap: { [key: string]: number } = {
+            'Thứ 2': 1, 'Monday': 1, 'Thứ 3': 2, 'Tuesday': 2,
+            'Thứ 4': 3, 'Wednesday': 3, 'Thứ 5': 4, 'Thursday': 4,
+            'Thứ 6': 5, 'Friday': 5, 'Thứ 7': 6, 'Saturday': 6,
+            'Chủ nhật': 7, 'Sunday': 7
+        };
+        return dayMap[day || ''] || 1;
+    }
+
     onSemesterChange() {
         this.loadSchedule();
     }
 
+    // Đơn giản hóa việc hiển thị thời gian
     getPeriodTime(period: number, isEnd: boolean = false): string {
-        // Mỗi tiết 45 phút, bắt đầu từ 7:00, nghỉ 15 phút giữa các tiết
-        const startTimes = [
-            '07:00', '07:50', '08:40', '09:45', '10:35', '11:25',
-            '13:00', '13:50', '14:40', '15:45', '16:35'
-        ];
-        const endTimes = [
-            '07:45', '08:35', '09:25', '10:30', '11:20', '12:10',
-            '13:45', '14:35', '15:25', '16:30', '17:20'
+        const times = [
+            ['07:00', '07:45'], ['07:50', '08:35'], ['08:40', '09:25'],
+            ['09:45', '10:30'], ['10:35', '11:20'], ['11:25', '12:10'],
+            ['13:00', '13:45'], ['13:50', '14:35'], ['14:40', '15:25'],
+            ['15:45', '16:30'], ['16:35', '17:20']
         ];
 
         if (period < 1 || period > 10) return '';
-        return isEnd ? endTimes[period - 1] : startTimes[period - 1];
+        return times[period - 1][isEnd ? 1 : 0];
     }
 
     getEventTooltip(event: any): string {

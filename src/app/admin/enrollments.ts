@@ -29,6 +29,14 @@ interface ScholarshipCandidate {
     semester: string;
 }
 
+interface ScholarshipStatistics {
+    totalCandidates: number;
+    averageGPA: number;
+    topGPA: number;
+    averageCompletionRate: number;
+    totalEligibleForScholarship: number;
+}
+
 @Component({
     selector: 'admin-enrollments',
     standalone: true,
@@ -42,6 +50,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     departments: DepartmentInfo[] = [];
     semesters: SemesterInfo[] = [];
     candidates: ScholarshipCandidate[] = [];
+    statistics: ScholarshipStatistics | null = null;
     selectedDepartmentId: number | null = null;
     selectedSemester: string = '';
     loading = false;
@@ -49,7 +58,6 @@ export class AdminEnrollmentsComponent implements OnInit {
     error = '';
     searchPerformed = false;
     userName = 'Admin';
-    skeletonRows = Array.from({ length: 6 }, (_, index) => index);
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [
@@ -132,21 +140,27 @@ export class AdminEnrollmentsComponent implements OnInit {
             params.semester = this.selectedSemester;
         }
 
-        console.log('Loading students eligible for scholarship (GPA >= 3.6) with params:', params);
+        console.log('Loading scholarship data with params:', params);
 
-        this.http.get<ScholarshipCandidate[]>(`${this.baseUrl}/scholarships/eligible-students`, { params }).subscribe({
-            next: (candidates) => {
-                this.candidates = candidates;
-                this.loading = false;
-                console.log('Loaded eligible scholarship candidates:', candidates);
-                console.log(`Found ${candidates.length} students with GPA >= 3.6`);
-            },
-            error: (error) => {
-                console.error('Error loading eligible scholarship candidates:', error);
-                this.error = 'Không thể tải danh sách sinh viên đủ điều kiện học bổng';
-                this.loading = false;
-                this.candidates = [];
-            }
+        // Gọi cả candidates và statistics từ backend
+        const candidatesRequest = this.http.get<ScholarshipCandidate[]>(`${this.baseUrl}/scholarships/eligible-students`, { params });
+        const statisticsRequest = this.http.get<ScholarshipStatistics>(`${this.baseUrl}/scholarships/statistics`, { params });
+
+        // Gọi song song để tối ưu performance
+        Promise.all([
+            candidatesRequest.toPromise(),
+            statisticsRequest.toPromise()
+        ]).then(([candidates, statistics]) => {
+            this.candidates = candidates || [];
+            this.statistics = statistics || null;
+            this.loading = false;
+            console.log('Loaded scholarship data:', { candidates: candidates?.length, statistics });
+        }).catch((error) => {
+            console.error('Error loading scholarship data:', error);
+            this.error = 'Lỗi khi tải dữ liệu học bổng';
+            this.loading = false;
+            this.candidates = [];
+            this.statistics = null;
         });
     }
 
@@ -187,20 +201,26 @@ export class AdminEnrollmentsComponent implements OnInit {
         });
     }
 
+    // Backend đã tính sẵn statistics, frontend chỉ hiển thị
     getAverageGPA(): number {
-        if (this.candidates.length === 0) return 0;
-        const totalGPA = this.candidates.reduce((sum, candidate) => sum + candidate.gpa, 0);
-        return totalGPA / this.candidates.length;
+        return this.statistics?.averageGPA || 0;
     }
 
     getTopGPA(): number {
-        if (this.candidates.length === 0) return 0;
-        return Math.max(...this.candidates.map(c => c.gpa));
+        return this.statistics?.topGPA || 0;
     }
 
     getCompletionRate(candidate: ScholarshipCandidate): number {
         if (candidate.totalCredits === 0) return 0;
         return (candidate.completedCredits / candidate.totalCredits) * 100;
+    }
+
+    getTotalEligibleForScholarship(): number {
+        return this.statistics?.totalEligibleForScholarship || 0;
+    }
+
+    getAverageCompletionRate(): number {
+        return this.statistics?.averageCompletionRate || 0;
     }
 
     hasActiveFilters(): boolean {
