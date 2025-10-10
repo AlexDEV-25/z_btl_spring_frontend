@@ -7,7 +7,7 @@
       </div>
       <div class="header-actions">
         <select class="semester-select" [(ngModel)]="selectedSemester" (change)="onSemesterChange()">
-          <option value="">Chọn học kỳ</option>
+          <option value="">Tất cả học kỳ</option>
           <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
             {{ semester.displayName }}
           </option>
