@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
 
-// Interfaces merged from admin-payment.service.ts
+// Interfaces merged from admin.ts
 export interface Payment {
     id: number;
     studentId: number;
@@ -302,8 +302,6 @@ export class AdminPaymentsComponent implements OnInit {
                 console.error('Error loading payment detail:', error);
                 this.loadingDetail = false;
                 this.error = 'Không thể tải chi tiết thanh toán';
-                // Create mock data as fallback
-                this.selectedPaymentDetail = this.createMockPaymentDetail(payment.id);
             }
         });
     }
@@ -408,38 +406,6 @@ export class AdminPaymentsComponent implements OnInit {
     formatDate(dateString: string): string {
         return new Date(dateString).toLocaleString('vi-VN');
     }
-
-    // Helper method to create mock payment detail when API fails
-    private createMockPaymentDetail(paymentId: number): PaymentDetail {
-        return {
-            id: paymentId,
-            studentId: 1000 + paymentId,
-            studentName: 'Sinh viên mẫu',
-            studentClass: 'Lớp mẫu',
-            semesterId: 1,
-            semesterName: 'Học kỳ 1 (2023-2024)',
-            paymentDate: new Date().toISOString(),
-            status: 'PENDING',
-            courses: [
-                {
-                    courseId: 1000 + paymentId,
-                    courseCode: 'MTH101',
-                    courseName: 'Toán cao cấp',
-                    credits: 3,
-                    fee: 3000000
-                },
-                {
-                    courseId: 2000 + paymentId,
-                    courseCode: 'PHY101',
-                    courseName: 'Vật lý đại cương',
-                    credits: 3,
-                    fee: 3000000
-                }
-            ],
-            totalAmount: 6000000
-        };
-    }
-
     /**
      * Export payments to CSV
      */

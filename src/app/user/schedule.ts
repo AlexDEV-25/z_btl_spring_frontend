@@ -22,7 +22,7 @@ export class UserScheduleComponent implements OnInit {
     studentId: number = 1;
     userName = '';
     availableSemesters: SemesterInfo[] = [];
-    
+
     // Timetable configuration used by the template
     periods: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     days: { label: string; value: string; index: number; date: string }[] = [
@@ -59,7 +59,7 @@ export class UserScheduleComponent implements OnInit {
         private userService: UserService,
         private router: Router,
         private authService: AuthService
-    ) {}
+    ) { }
 
     ngOnInit() {
         const currentUser = this.authService.getCurrentUser();
@@ -106,63 +106,9 @@ export class UserScheduleComponent implements OnInit {
                 console.error('Error loading schedule:', error);
                 this.error = `Lỗi khi tải thời khóa biểu: ${error.status} - ${error.statusText}`;
                 this.loading = false;
-                // Fallback to mock data for demo
-                this.loadMockSchedule();
             }
         });
     }
-
-    private loadMockSchedule() {
-        console.log('Loading mock schedule data...');
-        const currentUser = this.authService.getCurrentUser();
-        this.schedule = {
-            studentId: this.studentId,
-            studentCode: currentUser?.username || 'SV001',
-            studentName: currentUser?.fullName || 'Nguyễn Văn A',
-            semester: this.selectedSemester,
-            totalCredits: 18,
-            scheduleItems: [
-                {
-                    courseId: 1,
-                    courseCode: 'CS101',
-                    courseName: 'Lập trình cơ bản',
-                    credit: 3,
-                    period: '1-3',
-                    dayOfWeek: 'Thứ 2',
-                    lecturerName: 'GS. Nguyễn Văn B',
-                    className: 'CNTT01',
-                    room: 'A101',
-                    classroom: 'A101'
-                },
-                {
-                    courseId: 2,
-                    courseCode: 'MATH201',
-                    courseName: 'Toán cao cấp',
-                    credit: 4,
-                    period: '4-6',
-                    dayOfWeek: 'Thứ 3',
-                    lecturerName: 'TS. Trần Thị C',
-                    className: 'CNTT01',
-                    room: 'B202',
-                    classroom: 'B202'
-                },
-                {
-                    courseId: 3,
-                    courseCode: 'ENG101',
-                    courseName: 'Tiếng Anh 1',
-                    credit: 2,
-                    period: '7-8',
-                    dayOfWeek: 'Thứ 5',
-                    lecturerName: 'ThS. Lê Văn D',
-                    className: 'CNTT01',
-                    room: 'C303',
-                    classroom: 'C303'
-                }
-            ]
-        };
-        this.events = this.toEvents(this.schedule.scheduleItems);
-    }
-
     private toEvents(scheduleItems: ScheduleItem[]) {
         // Education management colors - matching the interface
         const palette = ['#ff6b35', '#3182ce', '#38a169', '#805ad5', '#319795', '#d53f8c', '#ecc94b'];
