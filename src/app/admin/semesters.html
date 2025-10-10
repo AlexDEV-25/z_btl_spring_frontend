@@ -1,13 +1,7 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>📅 Quản lý học kỳ</h3>
-    </div>
-
     <div class="toolbar">
-      <button class="btn btn-secondary" (click)="reset()">
-        🔄 Reset Form
-      </button>
+      <h3>📅 Quản lý học kỳ</h3>
       <span class="spacer"></span>
       <div class="search-container">
         <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search semesters..." />
@@ -27,11 +21,11 @@
             <div class="form-group">
               <label class="form-label">📅 Học kỳ</label>
               <input class="form-input" [(ngModel)]="form.semester" name="semester"
-                placeholder="Nhập học kỳ (ví dụ: 2024-1)..."
-                pattern="^[0-9]{4}-[0-9]{1}$" title="Định dạng: YYYY-X" required />
+                placeholder="Nhập học kỳ (ví dụ: 2024-1)..." pattern="^[0-9]{4}-[0-9]{1}$" title="Định dạng: YYYY-X"
+                required />
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="reset()">
               🔄 Reset
@@ -58,20 +52,22 @@
                 <th>⚙️ Thao tác</th>
               </tr>
             </thead>
-      <tbody>
-        <tr *ngFor="let s of filteredSemesters; let i = index" (click)="selectForEdit(s)">
-          <td><strong>{{ i + 1 }}</strong></td>
-          <td>{{ s.semester }}</td>
-          <td>
-            <div class="action-buttons">
-              <button type="button" class="btn btn-sm btn-success" (click)="$event.stopPropagation(); selectForEdit(s)">✏️ Edit</button>
-              <button type="button" class="btn btn-sm btn-danger" (click)="$event.stopPropagation(); remove(s.id)">🗑️ Delete</button>
-            </div>
-          </td>
-        </tr>
-        <tr *ngIf="semesters.length === 0">
-          <td colspan="3" class="no-data">📭 No semesters found</td>
-        </tr>
+            <tbody>
+              <tr *ngFor="let s of filteredSemesters; let i = index" (click)="selectForEdit(s)">
+                <td><strong>{{ i + 1 }}</strong></td>
+                <td>{{ s.semester }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button" class="btn btn-sm btn-success"
+                      (click)="$event.stopPropagation(); selectForEdit(s)">✏️ Edit</button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                      (click)="$event.stopPropagation(); remove(s.id)">🗑️ Delete</button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="semesters.length === 0">
+                <td colspan="3" class="no-data">📭 No semesters found</td>
+              </tr>
             </tbody>
           </table>
         </div>

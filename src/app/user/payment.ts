@@ -133,16 +133,26 @@ export class UserPaymentComponent implements OnInit {
     }
 
     getStatusBadgeClass(status: string): string {
+<<<<<<< HEAD
         const statusMap: {[key: string]: string} = {
             'PAID': 'status-paid',
             'PENDING': 'status-pending', 
+=======
+        const statusMap: { [key: string]: string } = {
+            'PAID': 'status-paid',
+            'PENDING': 'status-pending',
+>>>>>>> 6b1e1805668d4db77956b0a7168cb038c438ca42
             'FAILED': 'status-failed'
         };
         return statusMap[status] || 'status-unknown';
     }
 
     getStatusText(status: string): string {
+<<<<<<< HEAD
         const statusTextMap: {[key: string]: string} = {
+=======
+        const statusTextMap: { [key: string]: string } = {
+>>>>>>> 6b1e1805668d4db77956b0a7168cb038c438ca42
             'PAID': '✅ Đã thanh toán',
             'PENDING': '⏳ Chờ thanh toán',
             'FAILED': '❌ Thanh toán thất bại'

@@ -119,7 +119,8 @@
                   <span *ngIf="student.totalScore !== null && student.totalScore !== undefined" class="score-value">
                     {{ student.totalScore | number:'1.1-1' }}
                   </span>
-                  <span *ngIf="student.totalScore === null || student.totalScore === undefined" class="no-score">-</span>
+                  <span *ngIf="student.totalScore === null || student.totalScore === undefined"
+                    class="no-score">-</span>
                 </td>
                 <td class="letter-grade">
                   <span *ngIf="student.grade" class="grade-badge">{{ student.grade }}</span>

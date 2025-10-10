@@ -1,13 +1,7 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
     <div class="main-card">
-        <div class="page-header">
-            <h3>📖 Quản lý phân công giảng dạy</h3>
-        </div>
-
         <div class="toolbar">
-            <button class="btn btn-secondary" (click)="reset()">
-                🔄 Reset Form
-            </button>
+            <h3>📖 Quản lý phân công giảng dạy</h3>
             <span class="spacer"></span>
             <div class="search-container">
                 <input class="search-input" [(ngModel)]="searchText"
@@ -49,8 +43,7 @@
                         <div class="form-group">
                             <label class="form-label">⏰ Tiết học</label>
                             <input class="form-input" [(ngModel)]="form.period" name="period"
-                                placeholder="Nhập tiết học (ví dụ: 1-3, 4-6)..."
-                                title="Tiết học (ví dụ: 1-3, 4-6)" />
+                                placeholder="Nhập tiết học (ví dụ: 1-3, 4-6)..." title="Tiết học (ví dụ: 1-3, 4-6)" />
                         </div>
 
                         <div class="form-group">
@@ -104,33 +97,33 @@
                                 <th>⚙️ Thao tác</th>
                             </tr>
                         </thead>
-                <tbody>
-                    <tr *ngFor="let t of filteredTeachings; let i = index" (click)="selectForEdit(t)">
-                        <td><strong>{{ i + 1 }}</strong></td>
-                        <td>{{ getLecturerName(t.lecturerId) }}</td>
-                        <td>{{ getCourseName(t.courseId) }}</td>
-                        <td>{{ t.period || 'N/A' }}</td>
-                        <td>{{ t.dayOfWeek || 'N/A' }}</td>
-                        <td>{{ t.classRoom || 'N/A' }}</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button type="button" class="btn btn-sm btn-success"
-                                        (click)="$event.stopPropagation(); selectForEdit(t)">
-                                        ✏️ Sửa
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-danger"
-                                        (click)="$event.stopPropagation(); remove(t.id)">
-                                        🗑️ Xóa
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr *ngIf="teachings.length === 0">
-                            <td colspan="7" class="no-data">
-                                📭 Không có phân công giảng dạy nào
-                            </td>
-                        </tr>
-                    </tbody>
+                        <tbody>
+                            <tr *ngFor="let t of filteredTeachings; let i = index" (click)="selectForEdit(t)">
+                                <td><strong>{{ i + 1 }}</strong></td>
+                                <td>{{ getLecturerName(t.lecturerId) }}</td>
+                                <td>{{ getCourseName(t.courseId) }}</td>
+                                <td>{{ t.period || 'N/A' }}</td>
+                                <td>{{ t.dayOfWeek || 'N/A' }}</td>
+                                <td>{{ t.classRoom || 'N/A' }}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button type="button" class="btn btn-sm btn-success"
+                                            (click)="$event.stopPropagation(); selectForEdit(t)">
+                                            ✏️ Sửa
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            (click)="$event.stopPropagation(); remove(t.id)">
+                                            🗑️ Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr *ngIf="teachings.length === 0">
+                                <td colspan="7" class="no-data">
+                                    📭 Không có phân công giảng dạy nào
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>

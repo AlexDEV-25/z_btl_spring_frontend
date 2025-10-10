@@ -230,7 +230,7 @@ export class TeacherGradingComponent implements OnInit {
                 alert('Có lỗi xảy ra khi xuất bảng điểm!');
             }
         });
-    }     
+    }
 
     logout() {
         if (confirm('🚪 Bạn có chắc chắn muốn đăng xuất?')) {

@@ -1,20 +1,14 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Quản trị viên'">
   <div class="main-card">
-    <div class="page-header">
-      <h3>👥 Quản lý sinh viên</h3>
-    </div>
-
     <div class="toolbar">
-        <button class="btn btn-secondary" (click)="reset()">
-            🔄 Reset Form
+      <h3>👥 Quản lý sinh viên</h3>
+      <span class="spacer"></span>
+      <div class="search-container">
+        <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search students..." />
+        <button class="btn btn-success" (click)="loadStudents()">
+          🔍 Find
         </button>
-        <span class="spacer"></span>
-        <div class="search-container">
-            <input class="search-input" [(ngModel)]="searchText" placeholder="🔍 Search students..." />
-            <button class="btn btn-success" (click)="loadStudents()">
-                🔍 Find
-            </button>
-        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -50,7 +44,7 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="reset()">
               🔄 Reset
@@ -80,30 +74,30 @@
               </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let s of filteredStudents; let i = index" (click)="selectForEdit(s)">
-                    <td><strong>{{ i + 1 }}</strong></td>
-                    <td>{{ getUserName(s.userId) }}</td>
-                    <td><strong>{{ s.studentCode }}</strong></td>
-                    <td>{{ getClassName(s.classId) }}</td>
+              <tr *ngFor="let s of filteredStudents; let i = index" (click)="selectForEdit(s)">
+                <td><strong>{{ i + 1 }}</strong></td>
+                <td>{{ getUserName(s.userId) }}</td>
+                <td><strong>{{ s.studentCode }}</strong></td>
+                <td>{{ getClassName(s.classId) }}</td>
 
-                    <td>
-                        <div class="action-buttons">
-                            <button type="button" class="btn btn-sm btn-success"
-                                (click)="$event.stopPropagation(); selectForEdit(s)">
-                                ✏️ Edit
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger"
-                                (click)="$event.stopPropagation(); remove(s.id)">
-                                🗑️ Delete
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr *ngIf="students.length === 0">
-                    <td colspan="7" class="no-data">
-                        📭 No students found
-                    </td>
-                </tr>
+                <td>
+                  <div class="action-buttons">
+                    <button type="button" class="btn btn-sm btn-success"
+                      (click)="$event.stopPropagation(); selectForEdit(s)">
+                      ✏️ Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger"
+                      (click)="$event.stopPropagation(); remove(s.id)">
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="students.length === 0">
+                <td colspan="7" class="no-data">
+                  📭 No students found
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

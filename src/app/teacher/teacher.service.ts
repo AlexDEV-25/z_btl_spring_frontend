@@ -107,10 +107,10 @@ export class TeacherService {
                 next: (classes) => {
                     // Use a Map to store unique courses by courseId
                     const uniqueCourses = new Map<number, TeacherScheduleInfo>();
-                    
+
                     classes.forEach(cls => {
                         if (!uniqueCourses.has(cls.courseId)) {
-const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
+                            const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
                             uniqueCourses.set(cls.courseId, {
                                 ...cls,
                                 // For backward compatibility
@@ -128,7 +128,7 @@ const courseSchedules = classes.filter(c => c.courseId === cls.courseId);
                             });
                         }
                     });
-                    
+
                     observer.next(Array.from(uniqueCourses.values()));
                     observer.complete();
                 },

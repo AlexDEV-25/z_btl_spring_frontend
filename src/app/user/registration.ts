@@ -151,7 +151,11 @@ export class UserRegistrationComponent implements OnInit {
                 canUnregister: detail.enrollmentStatus === 'PENDING_PAYMENT'
             };
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 6b1e1805668d4db77956b0a7168cb038c438ca42
         // Nếu không tìm thấy, tạo course info mới
         return {
             courseId: detail.courseId,

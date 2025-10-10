@@ -1,10 +1,13 @@
 <app-layout [menuItems]="menuItems" [userName]="userName" [userRole]="'Sinh viên'">
     <div class="main-card">
-        <div class="page-header">
-            <h3>📚 Đăng ký môn học</h3>
-            <div class="semester-selector">
-                <label for="semester">Học kỳ:</label>
-                <select id="semester" [(ngModel)]="selectedSemester" (change)="onSemesterChange()">
+        <div class="grade-page-header">
+            <div>
+                <h3>📚 Đăng ký môn học</h3>
+                <p class="subtitle">Quản lý các môn đã đăng ký và lựa chọn học kỳ mong muốn</p>
+            </div>
+            <div class="header-actions">
+                <label class="field-label" for="semester">Học kỳ</label>
+                <select id="semester" class="semester-select" [(ngModel)]="selectedSemester" (change)="onSemesterChange()">
                     <option *ngFor="let semester of availableSemesters" [value]="semester.semester">
                         {{ semester.displayName }}
                     </option>
@@ -55,7 +58,7 @@
 
             <!-- Pending Courses -->
             <div *ngIf="!loading && pendingCourses.length > 0">
-                <h4 style="margin-bottom: 1rem; color: var(--accent-color);">⏳ Môn chờ xác nhận</h4>
+                <h4 class="section-title section-title--warning">⏳ Môn chờ xác nhận</h4>
                 <div class="course-grid">
                     <div *ngFor="let course of pendingCourses" class="course-card pending-course">
                         <div class="course-header">
@@ -109,7 +112,7 @@
 
             <!-- Enrolled Courses -->
             <div *ngIf="!loading && enrolledCourses.length > 0">
-                <h4 style="margin-bottom: 1rem; color: var(--primary-color);">📝 Môn đã đăng ký</h4>
+                <h4 class="section-title section-title--primary">📝 Môn đã đăng ký</h4>
                 <div class="course-grid">
                     <div *ngFor="let course of enrolledCourses" class="course-card enrolled-course">
                         <div class="course-header">
@@ -162,7 +165,7 @@
             </div>
             <!-- Available Courses -->
             <div *ngIf="!loading && availableCourses.length > 0">
-                <h4 style="margin-bottom: 1rem; color: var(--primary-color);">📋 Môn học có thể đăng ký</h4>
+                <h4 class="section-title section-title--primary">📋 Môn học có thể đăng ký</h4>
                 <div class="course-grid">
                     <div *ngFor="let course of availableCourses" class="course-card">
                         <div class="course-header">

@@ -152,6 +152,26 @@ export class UserScheduleComponent implements OnInit {
         return dayMap[day || ''] || 1;
     }
 
+    private parsePeriod(period?: string): { start: number; end: number } {
+        if (!period) return { start: 1, end: 1 };
+        const match = period.match(/(\d+)\s*-\s*(\d+)/);
+        if (match) {
+            return { start: Number(match[1]), end: Number(match[2]) };
+        }
+        const num = Number(period);
+        return { start: num || 1, end: num || 1 };
+    }
+
+    private dayToIndex(day?: string): number {
+        const dayMap: { [key: string]: number } = {
+            'Thứ 2': 1, 'Monday': 1, 'Thứ 3': 2, 'Tuesday': 2,
+            'Thứ 4': 3, 'Wednesday': 3, 'Thứ 5': 4, 'Thursday': 4,
+            'Thứ 6': 5, 'Friday': 5, 'Thứ 7': 6, 'Saturday': 6,
+            'Chủ nhật': 7, 'Sunday': 7
+        };
+        return dayMap[day || ''] || 1;
+    }
+
     onSemesterChange() {
         this.loadSchedule();
     }
@@ -159,12 +179,21 @@ export class UserScheduleComponent implements OnInit {
     // Đơn giản hóa việc hiển thị thời gian
     getPeriodTime(period: number, isEnd: boolean = false): string {
         const times = [
+<<<<<<< HEAD
             ['07:00', '07:45'], ['07:50', '08:35'], ['08:40', '09:25'], 
             ['09:45', '10:30'], ['10:35', '11:20'], ['11:25', '12:10'],
             ['13:00', '13:45'], ['13:50', '14:35'], ['14:40', '15:25'], 
             ['15:45', '16:30'], ['16:35', '17:20']
         ];
         
+=======
+            ['07:00', '07:45'], ['07:50', '08:35'], ['08:40', '09:25'],
+            ['09:45', '10:30'], ['10:35', '11:20'], ['11:25', '12:10'],
+            ['13:00', '13:45'], ['13:50', '14:35'], ['14:40', '15:25'],
+            ['15:45', '16:30'], ['16:35', '17:20']
+        ];
+
+>>>>>>> 6b1e1805668d4db77956b0a7168cb038c438ca42
         if (period < 1 || period > 10) return '';
         return times[period - 1][isEnd ? 1 : 0];
     }
