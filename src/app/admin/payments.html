@@ -35,8 +35,8 @@
 
       <div class="filter-item stretch">
         <label for="searchTerm">Tìm kiếm</label>
-        <input id="searchTerm" type="search" class="form-input" [(ngModel)]="searchTerm"
-          (input)="onSearchChange()" placeholder="ID thanh toán, mã sinh viên...">
+        <input id="searchTerm" type="search" class="form-input" [(ngModel)]="searchTerm" (input)="onSearchChange()"
+          placeholder="ID thanh toán, mã sinh viên...">
       </div>
 
       <div class="filter-item">
@@ -205,18 +205,17 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let course of selectedPaymentDetail.courses">
+                  <tr *ngFor="let course of selectedPaymentDetail.paymentDetails">
                     <td class="course-code">{{ course.courseCode }}</td>
                     <td class="course-name">{{ course.courseName }}</td>
-                    <td class="course-credits">{{ course.credits }}</td>
+                    <td class="course-credits">{{ course.credit }}</td>
                     <td class="course-fee">{{ formatCurrency(course.fee) }}</td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr class="total-row">
                     <td colspan="3"><strong>Tổng cộng:</strong></td>
-                    <td class="total-amount"><strong>{{ formatCurrency(selectedPaymentDetail.totalAmount) }}</strong>
-                    </td>
+                    <td class="total-amount"><strong>{{ formatCurrency(selectedPaymentDetail.totalAmount) }}</strong></td>
                   </tr>
                 </tfoot>
               </table>

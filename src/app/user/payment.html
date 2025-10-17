@@ -80,13 +80,13 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let course of paymentInfo.courseDetails">
+                <tr *ngFor="let course of paymentInfo.paymentDetails">
                   <td class="course-code">{{ course.courseCode }}</td>
                   <td class="course-name">{{ course.courseName }}</td>
-                  <td class="course-credits">{{ course.credits }}</td>
+                  <td class="course-credits">{{ course.credit }}</td>
                   <td class="course-fee">{{ formatCurrency(course.fee) }}</td>
                   <td class="course-status">
-                    <span class="status-badge status-enrolled">{{ course.enrollmentStatus }}</span>
+                    <span class="status-badge status-enrolled">ENROLLED</span>
                   </td>
                 </tr>
               </tbody>
@@ -126,7 +126,7 @@
             </div>
 
             <div class="course-count">
-              📚 {{ payment.courseDetails.length }} môn học
+              📚 {{ payment.paymentDetails.length }} môn học
             </div>
 
             <div class="semester-actions">

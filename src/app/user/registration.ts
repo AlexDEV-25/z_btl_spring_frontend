@@ -98,29 +98,19 @@ export class UserRegistrationComponent implements OnInit {
         this.availableCourses = available.filter(course => course.canRegister);
 
         // Lấy thông tin từ payment details nếu có
-        const paymentDetails = payment?.courseDetails ?? [];
+        const paymentDetails = payment?.paymentDetails ?? [];
 
-        this.enrolledCourses = paymentDetails
-            .filter(detail => detail.enrollmentStatus === 'ENROLLED')
-            .map(detail => {
-                const courseInfo = this.mapPaymentDetailToCourseInfo(detail, available);
-                return {
-                    ...courseInfo,
-                    canUnregister: false, // Môn đã enrolled không thể hủy
-                    reason: 'Đang học'
-                };
-            });
+        // ✅ Đơn giản: tất cả courses đã đăng ký đều có thể hủy đăng ký (chưa thanh toán)
+        this.enrolledCourses = paymentDetails.map((detail: any) => {
+            const courseInfo = this.mapPaymentDetailToCourseInfo(detail, available);
+            return {
+                ...courseInfo,
+                canUnregister: true, // ✅ Tất cả courses đã đăng ký đều có thể hủy
+                reason: 'Đã đăng ký - có thể hủy'
+            };
+        });
 
-        this.pendingCourses = paymentDetails
-            .filter(detail => detail.enrollmentStatus === 'PENDING_PAYMENT')
-            .map(detail => {
-                const courseInfo = this.mapPaymentDetailToCourseInfo(detail, available);
-                return {
-                    ...courseInfo,
-                    canUnregister: true, // Môn pending có thể hủy
-                    reason: 'Chờ thanh toán'
-                };
-            });
+        this.pendingCourses = []; // Không cần pending courses nữa
 
         // Lấy môn đã hoàn thành từ grades
         this.completedCourses = (grades?.gradeItems ?? [])
@@ -148,18 +138,18 @@ export class UserRegistrationComponent implements OnInit {
             return {
                 ...course,
                 canRegister: false,
-                canUnregister: detail.enrollmentStatus === 'PENDING_PAYMENT'
+                canUnregister: true // ✅ Đơn giản: tất cả courses đã đăng ký đều có thể hủy
             };
         }
 
-        // Nếu không tìm thấy, tạo course info mới
+        // Nếu không tìm thấy, tạo course info mới từ PaymentDetailDTO
         return {
             courseId: detail.courseId,
             courseCode: detail.courseCode || '---',
             courseName: detail.courseName || 'Môn học chưa rõ',
-            credit: detail.credits || 0,
+            credit: detail.credit || 0, // ✅ Từ PaymentDetailDTO
             canRegister: false,
-            canUnregister: detail.enrollmentStatus === 'PENDING_PAYMENT'
+            canUnregister: true // ✅ Đơn giản: tất cả courses đã đăng ký đều có thể hủy
         };
     }
 
@@ -217,7 +207,7 @@ export class UserRegistrationComponent implements OnInit {
 
     // Các hàm helper đơn giản - không cần tính toán phức tạp
     getTotalEnrolledCredits(): number {
-        return [...this.enrolledCourses, ...this.pendingCourses].reduce((total, course) => total + (course.credit || 0), 0);
+        return this.enrolledCourses.reduce((total, course) => total + (course.credit || 0), 0);
     }
 
     getAvailableCoursesCount(): number {

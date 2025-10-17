@@ -127,6 +127,21 @@ export interface ChangePasswordResponse {
     message: string;
 }
 
+/**
+ * DTO từ bảng payment_details - tương ứng với PaymentDetailDTO trong backend
+ */
+export interface PaymentDetailDTO {
+    id?: number;
+    paymentId?: number;
+    enrollmentId: number;
+    semester: string;
+    courseId: number;
+    courseCode: string;
+    courseName: string;
+    credit: number;
+    fee: number;
+}
+
 export interface PaymentInfo {
     semesterId: number;
     semester: string;
@@ -136,10 +151,14 @@ export interface PaymentInfo {
     remainingAmount: number;
     paymentStatus: string;
     paymentDate?: string;
-    courseDetails: CoursePaymentDetail[];
+    paymentDetails: PaymentDetailDTO[]; // ✅ Dùng PaymentDetailDTO từ backend
     canCreatePayment: boolean;
 }
 
+/**
+ * @deprecated - Đã bị XÓA từ backend
+ * Giữ lại để tương thích với code cũ
+ */
 export interface CoursePaymentDetail {
     courseId: number;
     courseCode: string;
