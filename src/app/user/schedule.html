@@ -18,10 +18,10 @@
       <div *ngIf="loading" class="loading-message">⏳ Đang tải thời khóa biểu...</div>
 
       <!-- Student Info Summary -->
-      <div *ngIf="schedule && !loading" class="info-card">
+      <div *ngIf="scheduleList.length > 0 && !loading" class="info-card">
         <div class="info-row">
           <span class="info-label">👨‍🎓 Sinh viên:</span>
-          <span class="info-value">{{ schedule.studentName }} ({{ schedule.studentCode }})</span>
+          <span class="info-value">{{ userName }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">📚 Học kỳ:</span>
@@ -29,24 +29,24 @@
         </div>
         <div class="info-row">
           <span class="info-label">🎯 Tổng tín chỉ:</span>
-          <span class="info-value">{{ schedule.totalCredits }} <span class="credit-badge credit-badge--compact">TC</span></span>
+          <span class="info-value">{{ totalCredits }} <span class="credit-badge credit-badge--compact">TC</span></span>
         </div>
       </div>
 
-      <div *ngIf="!loading && (!schedule || schedule.scheduleItems.length === 0)" class="no-data">
+      <div *ngIf="!loading && scheduleList.length === 0" class="no-data">
         <div class="no-data-icon">📚</div>
+        <p>Chưa có thời khóa biểu cho học kỳ này</p>
         <button class="btn btn-primary" (click)="goToRegistration()">
           ➕ Đăng ký môn học
         </button>
       </div>
 
-      <div *ngIf="!loading && schedule && schedule.scheduleItems.length > 0" class="timetable">
+      <div *ngIf="!loading && scheduleList.length > 0" class="timetable">
         <!-- Day headers -->
         <div class="corner-cell">
           Tiết / Thứ
         </div>
         <div class="day-header" *ngFor="let d of days" [style.gridColumn]="(d.index + 1)" [style.gridRow]="1">
-          <div class="day-name">{{ d.label }}</div>
           <div class="day-date">{{ d.date }}</div>
         </div>
 
@@ -80,7 +80,7 @@
       </div>
 
       <!-- Quick Actions -->
-      <div *ngIf="schedule && schedule.scheduleItems.length > 0" class="quick-actions">
+      <div *ngIf="scheduleList.length > 0" class="quick-actions">
         <button class="btn btn-secondary" (click)="goToGrades()">
           📊 Xem bảng điểm
         </button>

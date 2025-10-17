@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService, StudentSchedule, ScheduleItem, SemesterInfo } from './user.service';
+import { UserService, StudentScheduleDetail, SemesterInfo } from './user.service';
 import { AuthService } from '../auth.service';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
@@ -15,13 +15,15 @@ import { MenuItem } from '../shared/sidebar.component';
     styleUrls: ['../shared/modern-theme.css']
 })
 export class UserScheduleComponent implements OnInit {
-    schedule: StudentSchedule | null = null;
+    scheduleList: StudentScheduleDetail[] = [];
     loading = false;
     error = '';
     selectedSemester = '2024-1';
     studentId: number = 1;
     userName = '';
     availableSemesters: SemesterInfo[] = [];
+    hasScheduleGenerated = false;
+    totalCredits = 0;
 
     // Timetable configuration used by the template
     periods: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -95,11 +97,33 @@ export class UserScheduleComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.userService.getStudentSchedule(this.selectedSemester).subscribe({
+        // Kiểm tra xem đã có schedule chưa
+        this.userService.hasSchedule(this.selectedSemester).subscribe({
+            next: (exists) => {
+                this.hasScheduleGenerated = exists;
+                if (exists) {
+                    // Nếu đã có, lấy schedule
+                    this.fetchScheduleList();
+                } else {
+                    // Nếu chưa có, tạo mới
+                    this.generateSchedule();
+                }
+            },
+            error: (error) => {
+                console.error('Error checking schedule:', error);
+                // Nếu lỗi, thử lấy luôn
+                this.fetchScheduleList();
+            }
+        });
+    }
+
+    fetchScheduleList() {
+        this.userService.getStudentScheduleList(this.selectedSemester).subscribe({
             next: (data) => {
                 console.log('Schedule loaded successfully:', data);
-                this.schedule = data;
-                this.events = this.toEvents(data.scheduleItems);
+                this.scheduleList = data;
+                this.totalCredits = this.calculateTotalCredits(data);
+                this.events = this.toEvents(data);
                 this.loading = false;
             },
             error: (error) => {
@@ -110,12 +134,28 @@ export class UserScheduleComponent implements OnInit {
         });
     }
 
-    // Backend đã cung cấp dữ liệu đầy đủ, frontend chỉ cần convert đơn giản
-    private toEvents(scheduleItems: ScheduleItem[]) {
+    generateSchedule() {
+        this.userService.generateSchedule(this.selectedSemester).subscribe({
+            next: (message) => {
+                console.log('Schedule generated:', message);
+                this.hasScheduleGenerated = true;
+                // Sau khi tạo xong, lấy schedule
+                this.fetchScheduleList();
+            },
+            error: (error) => {
+                console.error('Error generating schedule:', error);
+                this.error = `Lỗi khi tạo thời khóa biểu: ${error.error || error.statusText}`;
+                this.loading = false;
+            }
+        });
+    }
+
+    // Convert StudentScheduleDetail sang events để hiển thị
+    private toEvents(scheduleList: StudentScheduleDetail[]) {
         const palette = ['#ff6b35', '#3182ce', '#38a169', '#805ad5', '#319795', '#d53f8c', '#ecc94b'];
         let idx = 0;
 
-        return scheduleItems.map(item => {
+        return scheduleList.map(item => {
             const { start, end } = this.parsePeriod(item.period);
             const color = palette[idx++ % palette.length];
 
@@ -124,12 +164,16 @@ export class UserScheduleComponent implements OnInit {
                 start,
                 end: end + 1,
                 title: `${item.courseCode} - ${item.courseName}`,
-                lecturer: item.lecturerName,
-                room: item.classroom || item.room || 'Chưa xác định',
+                lecturer: item.lecturerName || 'Chưa phân công',
+                room: item.classroom || 'Chưa xác định',
                 credit: item.credit,
                 color
             };
         });
+    }
+
+    private calculateTotalCredits(scheduleList: StudentScheduleDetail[]): number {
+        return scheduleList.reduce((sum, item) => sum + (item.credit || 0), 0);
     }
 
     private parsePeriod(period?: string): { start: number; end: number } {

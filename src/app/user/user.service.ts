@@ -2,7 +2,35 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-// ===== Student Portal Interfaces (Simple like Teacher) =====
+// ===== Student Portal Interfaces (Updated for new backend) =====
+
+/**
+ * DTO trả về từ backend - lấy từ bảng student_schedule
+ * Join với teaching, course, lecturer để có thông tin đầy đủ
+ */
+export interface StudentScheduleDetail {
+    id: number;
+    studentId: number;
+    enrollmentId: number;
+    teachingId: number;
+    semester: string;
+    // Thông tin từ teaching và course
+    courseId: number;
+    courseCode: string;
+    courseName: string;
+    credit: number;
+    dayOfWeek: string;
+    period: string;
+    classroom: string;
+    // Thông tin giảng viên
+    lecturerId: number;
+    lecturerName: string;
+}
+
+/**
+ * @deprecated - Dùng StudentScheduleDetail thay thế
+ * Giữ lại để tương thích với code cũ
+ */
 export interface ScheduleItem {
     courseId: number;
     courseCode: string;
@@ -11,18 +39,8 @@ export interface ScheduleItem {
     period: string;
     dayOfWeek: string;
     lecturerName: string;
-    className: string;
     room: string;
     classroom?: string;
-}
-
-export interface StudentSchedule {
-    studentId: number;
-    studentCode: string;
-    studentName: string;
-    semester: string;
-    totalCredits: number;
-    scheduleItems: ScheduleItem[];
 }
 
 export interface GradeItem {
@@ -140,10 +158,25 @@ export class UserService {
     constructor(private http: HttpClient) { }
 
     /**
-     * Lấy thời khóa biểu của sinh viên hiện tại
+     * Lấy thời khóa biểu từ bảng student_schedule (API mới)
+     * Trả về List<StudentScheduleDetail> từ backend
      */
-    getStudentSchedule(semester: string = '2024-1'): Observable<StudentSchedule> {
-        return this.http.get<StudentSchedule>(`${this.baseUrl}/schedule?semester=${semester}`);
+    getStudentScheduleList(semester: string = '2024-1'): Observable<StudentScheduleDetail[]> {
+        return this.http.get<StudentScheduleDetail[]>(`${this.baseUrl}/schedule-list?semester=${semester}`);
+    }
+
+    /**
+     * Tạo/cập nhật thời khóa biểu cho sinh viên
+     */
+    generateSchedule(semester: string = '2024-1'): Observable<string> {
+        return this.http.post(`${this.baseUrl}/schedule/generate?semester=${semester}`, {}, { responseType: 'text' });
+    }
+
+    /**
+     * Kiểm tra sinh viên đã có thời khóa biểu chưa
+     */
+    hasSchedule(semester: string = '2024-1'): Observable<boolean> {
+        return this.http.get<boolean>(`${this.baseUrl}/schedule/exists?semester=${semester}`);
     }
 
     /**
