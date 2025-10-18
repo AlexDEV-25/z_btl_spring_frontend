@@ -26,7 +26,7 @@ export class AdminClassesComponent {
     searchText: string = '';
     form: ClassEntity = { name: '', year: '' };
     editingId: number | null = null;
-    userName = 'Quản trị viên';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [

@@ -53,11 +53,12 @@ export class AdminEnrollmentsComponent implements OnInit {
     statistics: ScholarshipStatistics | null = null;
     selectedDepartmentId: number | null = null;
     selectedSemester: string = '';
+    searchText: string = '';
     loading = false;
     exporting = false;
     error = '';
     searchPerformed = false;
-    userName = 'Admin';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [
@@ -78,7 +79,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     ngOnInit() {
         this.loadDepartments();
         this.loadSemesters();
-        this.loadScholarshipCandidates();
+        // Không tự động load candidates, để user tự tìm kiếm
     }
 
     loadDepartments() {
@@ -126,6 +127,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     onFilterChange() {
         this.loadScholarshipCandidates();
     }
+
     loadScholarshipCandidates() {
         this.loading = true;
         this.error = '';
@@ -138,6 +140,9 @@ export class AdminEnrollmentsComponent implements OnInit {
         }
         if (this.selectedSemester) {
             params.semester = this.selectedSemester;
+        }
+        if (this.searchText && this.searchText.trim()) {
+            params.search = this.searchText.trim();
         }
 
         console.log('Loading scholarship data with params:', params);
@@ -173,6 +178,7 @@ export class AdminEnrollmentsComponent implements OnInit {
         let params: any = {};
         if (this.selectedDepartmentId) params.departmentId = this.selectedDepartmentId;
         if (this.selectedSemester) params.semester = this.selectedSemester;
+        if (this.searchText && this.searchText.trim()) params.search = this.searchText.trim();
 
         this.http.get(`${this.baseUrl}/scholarships/export`, {
             params,
@@ -224,7 +230,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     }
 
     hasActiveFilters(): boolean {
-        return !!this.selectedDepartmentId || !!this.selectedSemester;
+        return !!this.selectedDepartmentId || !!this.selectedSemester || !!this.searchText;
     }
 
     getTableTitle(): string {
@@ -238,6 +244,7 @@ export class AdminEnrollmentsComponent implements OnInit {
     resetFilters() {
         this.selectedDepartmentId = null;
         this.selectedSemester = '';
+        this.searchText = '';
         this.loadScholarshipCandidates();
     }
 

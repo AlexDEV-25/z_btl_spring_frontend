@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TeacherService, TeacherProfile, ChangePasswordRequest, ChangePasswordResponse } from './teacher.service';
+import { TeacherService, TeacherProfile, ChangePasswordRequest, ApiResponse } from './teacher.service';
 import { Router } from '@angular/router';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
@@ -100,7 +100,7 @@ export class TeacherProfileComponent implements OnInit {
         this.passwordMessage = '';
 
         this.teacherService.changePassword(this.passwordRequest).subscribe({
-            next: (response: ChangePasswordResponse) => {
+            next: (response: ApiResponse) => {
                 console.log('Password change response:', response);
                 this.passwordLoading = false;
                 

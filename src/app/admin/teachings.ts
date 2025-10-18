@@ -48,7 +48,7 @@ export class AdminTeachingsComponent {
     searchText: string = '';
     form: Teaching = { lecturerId: null, courseId: null, period: '', dayOfWeek: '', classRoom: '' };
     editingId: number | null = null;
-    userName = 'Quản trị viên';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [

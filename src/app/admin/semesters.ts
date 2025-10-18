@@ -25,7 +25,7 @@ export class AdminSemestersComponent {
   searchText: string = '';
   form: SemesterEntity = { semester: '' };
   editingId: number | null = null;
-  userName = 'Quản trị viên';
+  userName = 'Nguyễn Văn Hiệu Trưởng';
 
   // Menu items for admin sidebar
   menuItems: MenuItem[] = [

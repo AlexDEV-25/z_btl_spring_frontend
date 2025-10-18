@@ -26,7 +26,7 @@ export class AdminDepartmentsComponent {
   searchText: string = '';
   form: Department = { name: '', code: '' };
   editingId: number | null = null;
-  userName = 'Quản trị viên';
+  userName = 'Nguyễn Văn Hiệu Trưởng';
 
   // Menu items for admin sidebar
   menuItems: MenuItem[] = [

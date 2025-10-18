@@ -46,7 +46,7 @@ export class AdminStudentsComponent {
     searchText: string = '';
     form: Student = { userId: null, studentCode: '', classId: null };
     editingId: number | null = null;
-    userName = 'Quản trị viên';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [

@@ -6,22 +6,8 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { LayoutComponent } from '../shared/layout.component';
 import { MenuItem } from '../shared/sidebar.component';
+import { ApiResponse, PaymentDetailDTO } from '../shared/interfaces';
 
-// Interfaces merged from admin-payment.service.ts
-/**
- * DTO từ bảng payment_details - tương ứng với PaymentDetailDTO trong backend
- */
-export interface PaymentDetailDTO {
-    id?: number;
-    paymentId?: number;
-    enrollmentId: number;
-    semester: string;
-    courseId: number;
-    courseCode: string;
-    courseName: string;
-    credit: number;
-    fee: number;
-}
 
 export interface Payment {
     id: number;
@@ -42,31 +28,14 @@ export interface PaymentDetail {
     semesterName: string;
     paymentDate: string;
     status: 'PENDING' | 'PAID' | 'FAILED';
-    paymentDetails: PaymentDetailDTO[]; // ✅ Dùng PaymentDetailDTO từ backend
+    paymentDetails: PaymentDetailDTO[];
     totalAmount: number;
 }
 
-/**
- * @deprecated - Đã bị XÓA từ backend
- * Giữ lại để tương thích với code cũ
- */
-export interface CoursePaymentDetail {
-    courseId: number;
-    courseCode: string;
-    courseName: string;
-    credits: number;
-    fee: number;
-}
 
 export interface PaymentStatusUpdateRequest {
     status: string;
     reason?: string;
-}
-
-export interface PaymentStatusUpdateResponse {
-    success: boolean;
-    message: string;
-    payment?: Payment;
 }
 
 export interface PaymentStatistics {
@@ -116,7 +85,7 @@ export class AdminPaymentsComponent implements OnInit {
     updating = false;
     loadingDetail = false;
 
-    userName = 'Admin';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [
@@ -179,8 +148,8 @@ export class AdminPaymentsComponent implements OnInit {
     /**
      * Cập nhật trạng thái thanh toán
      */
-    updatePaymentStatus(id: number, request: PaymentStatusUpdateRequest): Observable<PaymentStatusUpdateResponse> {
-        return this.http.put<PaymentStatusUpdateResponse>(`${this.baseUrl}/${id}/status`, request);
+    updatePaymentStatus(id: number, request: PaymentStatusUpdateRequest): Observable<ApiResponse> {
+        return this.http.put<ApiResponse>(`${this.baseUrl}/${id}/status`, request);
     }
 
     /**
@@ -339,7 +308,7 @@ export class AdminPaymentsComponent implements OnInit {
         };
 
         this.updatePaymentStatus(this.selectedPayment.id, request).subscribe({
-            next: (response: PaymentStatusUpdateResponse) => {
+            next: (response: ApiResponse) => {
                 if (response.success) {
                     this.successMessage = response.message;
                     this.loadPayments();

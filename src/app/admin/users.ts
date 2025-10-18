@@ -57,7 +57,7 @@ export class AdminUsersComponent {
     searchText: string = '';
     form: User = { username: '', password: '', fullName: '', email: '', roleId: null, departmentId: null, gender: 'MALE', phone: '', dateOfBirth: '', address: '' };
     editingId: number | null = null;
-    userName = 'Quản trị viên';
+    userName = 'Nguyễn Văn Hiệu Trưởng';
 
     // Menu items for admin sidebar
     menuItems: MenuItem[] = [

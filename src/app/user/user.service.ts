@@ -5,6 +5,14 @@ import { Observable } from 'rxjs';
 // ===== Student Portal Interfaces (Updated for new backend) =====
 
 /**
+ * Base API Response - sử dụng chung cho tất cả API responses
+ */
+export interface ApiResponse {
+    success: boolean;
+    message: string;
+}
+
+/**
  * DTO trả về từ backend - lấy từ bảng student_schedule
  * Join với teaching, course, lecturer để có thông tin đầy đủ
  */
@@ -122,9 +130,11 @@ export interface ChangePasswordRequest {
     confirmPassword: string;
 }
 
-export interface ChangePasswordResponse {
-    success: boolean;
-    message: string;
+/**
+ * @deprecated - Sử dụng ApiResponse thay thế
+ * Giữ lại để tương thích với code cũ
+ */
+export interface ChangePasswordResponse extends ApiResponse {
 }
 
 /**
@@ -142,6 +152,10 @@ export interface PaymentDetailDTO {
     fee: number;
 }
 
+/**
+ * @deprecated - Sử dụng PaymentSummaryDTO thay thế từ Share.java
+ * Giữ lại để tương thích với code cũ
+ */
 export interface PaymentInfo {
     semesterId: number;
     semester: string;
@@ -151,7 +165,7 @@ export interface PaymentInfo {
     remainingAmount: number;
     paymentStatus: string;
     paymentDate?: string;
-    paymentDetails: PaymentDetailDTO[]; // ✅ Dùng PaymentDetailDTO từ backend
+    paymentDetails: PaymentDetailDTO[];
     canCreatePayment: boolean;
 }
 
@@ -244,8 +258,8 @@ export class UserService {
     /**
      * Thay đổi mật khẩu
      */
-    changePassword(request: ChangePasswordRequest): Observable<ChangePasswordResponse> {
-        return this.http.post<ChangePasswordResponse>(`${this.baseUrl}/change-password`, request);
+    changePassword(request: ChangePasswordRequest): Observable<ApiResponse> {
+        return this.http.post<ApiResponse>(`${this.baseUrl}/change-password`, request);
     }
 
     /**

@@ -2,6 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+/**
+ * Base API Response - sử dụng chung cho tất cả API responses
+ */
+export interface ApiResponse {
+    success: boolean;
+    message: string;
+}
+
 export interface ScheduleTime {
     period: string;
     dayOfWeek: string;
@@ -77,6 +85,10 @@ export interface ChangePasswordRequest {
     confirmPassword: string;
 }
 
+/**
+ * @deprecated - Sử dụng ApiResponse thay thế
+ * Giữ lại để tương thích với code cũ
+ */
 export interface ChangePasswordResponse {
     success: boolean;
     message: string;
@@ -161,8 +173,8 @@ export class TeacherService {
     /**
      * Thay đổi mật khẩu
      */
-    changePassword(request: ChangePasswordRequest): Observable<ChangePasswordResponse> {
-        return this.http.post<ChangePasswordResponse>(`${this.baseUrl}/change-password`, request);
+    changePassword(request: ChangePasswordRequest): Observable<ApiResponse> {
+        return this.http.post<ApiResponse>(`${this.baseUrl}/change-password`, request);
     }
 
     /**
